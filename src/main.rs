@@ -1,53 +1,62 @@
-use serde_json::{Result, Value};
+use std::fmt;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct DX {
     call: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct WX {
     sfi: u16,
 }
 
-// TODO
-// https://stackoverflow.com/questions/53488328/how-to-specify-that-all-implementers-of-a-trait-must-also-implement-serialize
-trait Spot /*: serde::Serialize*/ {
-    fn get_type(&self) -> &str;
-    fn to_string(&self) -> String;
-    fn to_json(&self) -> String /*where Self: Serialize*/ {
-        serde_json::to_string(&self).unwrap()
-    }
-    
+#[derive(Serialize, Deserialize)]
+enum Spot {
+    DX(DX),
+    WX(WX),
 }
 
-impl Spot for DX {
-    fn get_type(&self) -> &str {
-        "DX"
-    }
-    
-    fn to_string(&self) -> String {
-        format!("type={}, call={}", "DX", self.call)
+#[derive(Debug)]
+enum ParseError {
+    UnknownType,
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Error while parsing: {:?}", self)
     }
 }
 
-impl Spot for WX {
-    fn get_type(&self) -> &str {
-        "WX"
-    }
-    
-    fn to_string(&self) -> String {
-        format!("type={}, sfi={}", "WX", self.sfi)
+
+fn parse(input: &str) -> std::result::Result<Spot, ParseError> {
+    match input {
+        "dx" => Ok(Spot::DX(DX {
+            call: String::from("DF2MX"),
+        })),
+        "wx" => Ok(Spot::WX(WX { sfi: 123 })),
+        _ => Err(ParseError::UnknownType),
     }
 }
-
-fn create() -> Box<dyn Spot> {
-    Box::new(DX { call: String::from("DF2MX") })
-}
-
 
 fn main() {
-    println!("{}", create().to_string())
-}
+    let input = "dx";
 
+    match parse(input) {
+        Ok(spot) => {
+            match &spot {
+                Spot::DX(dx) => {
+                    println!("Found DX spot from {}", dx.call)
+                }
+                Spot::WX(wx) => {
+                    println!("Found WX spot with sfi={}", wx.sfi)
+                }
+            }
+
+            println!("{}", serde_json::to_string(&spot).unwrap());
+        }
+        Err(e) => {
+            eprint!("{}", e);
+        }
+    }
+}
