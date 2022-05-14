@@ -63,7 +63,15 @@ struct WWV {
 
 impl Spot for WWV {
     fn new() -> WWV {
-        WWV { call_de: String::new(), utc: 0, sfi: 0, a: 0, k: 0, info1: String::new(), info2: String::new() }
+        WWV {
+            call_de: String::new(),
+            utc: 0,
+            sfi: 0,
+            a: 0,
+            k: 0,
+            info1: String::new(),
+            info2: String::new(),
+        }
     }
 }
 
@@ -165,7 +173,7 @@ fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<SpotType, ParseError> {
 
             Ok(SpotType::WWV(wwv))
         }
-        None => Err(ParseError::InvalidContent)
+        None => Err(ParseError::InvalidContent),
     }
 }
 
