@@ -41,6 +41,15 @@ impl Spot for DX {
     }
 }
 
+enum RegexDxCaptureIds {
+    CallDe = 3,
+    Freq = 4,
+    CallDx = 5,
+    Comment = 6,
+    Utc = 7,
+    Loc = 8,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -101,12 +110,12 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<SpotType, ParseError> {
 
     match RE_DX.captures(raw) {
         Some(c) => {
-            dx.call_de = check_existence_str(&c, 3)?;
-            dx.call_dx = check_existence_str(&c, 5)?;
-            dx.freq = check_existence_num(&c, 4)?;
-            dx.utc = check_existence_num(&c, 7)?;
-            dx.loc = check_existence_str_opt(&c, 8);
-            dx.comment = check_existence_str_opt(&c, 6);
+            dx.call_de = check_existence_str(&c, RegexDxCaptureIds::CallDe as u32)?;
+            dx.call_dx = check_existence_str(&c, RegexDxCaptureIds::CallDx as u32)?;
+            dx.freq = check_existence_num(&c, RegexDxCaptureIds::Freq as u32)?;
+            dx.utc = check_existence_num(&c, RegexDxCaptureIds::Utc as u32)?;
+            dx.loc = check_existence_str_opt(&c, RegexDxCaptureIds::Loc as u32);
+            dx.comment = check_existence_str_opt(&c, RegexDxCaptureIds::Comment as u32);
 
             Ok(SpotType::DX(dx))
         }
