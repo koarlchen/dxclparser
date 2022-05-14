@@ -11,7 +11,7 @@ trait Spot {
 #[derive(Serialize, Deserialize)]
 enum SpotType {
     DX(DX),
-    WWV,
+    WWV(WWV),
     WCY,
     WX,
     ToAll,
@@ -50,6 +50,33 @@ enum RegexDxCaptureIds {
     Loc = 8,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct WWV {
+    call_de: String,
+    utc: u8,
+    sfi: u16,
+    a: u16,
+    k: u16,
+    info1: String,
+    info2: String,
+}
+
+impl Spot for WWV {
+    fn new() -> WWV {
+        WWV { call_de: String::new(), utc: 0, sfi: 0, a: 0, k: 0, info1: String::new(), info2: String::new() }
+    }
+}
+
+enum RegexWwvCaptureIds {
+    CallDe = 3,
+    Utc = 4,
+    Sfi = 5,
+    A = 6,
+    K = 7,
+    Info1 = 8,
+    Info2 = 9,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -68,7 +95,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
     if input.starts_with("DX de") {
         Ok(SpotType::DX(DX::new()))
     } else if input.starts_with("WWV de") {
-        Ok(SpotType::WWV)
+        Ok(SpotType::WWV(WWV::new()))
     } else if input.starts_with("WCY de") {
         Ok(SpotType::WCY)
     } else if input.starts_with("WX de") {
@@ -85,9 +112,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
 fn parse(raw: &str) -> Result<SpotType, ParseError> {
     match ident_type(raw)? {
         SpotType::DX(dx) => parse_dx(raw, dx),
-        SpotType::WWV => {
-            todo!()
-        }
+        SpotType::WWV(wwv) => parse_wwv(raw, wwv),
         SpotType::WCY => {
             todo!()
         }
@@ -123,6 +148,27 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<SpotType, ParseError> {
     }
 }
 
+fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<SpotType, ParseError> {
+    lazy_static! {
+        static ref RE_WWV: Regex = Regex::new(r#"(^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$)"#).unwrap();
+    }
+
+    match RE_WWV.captures(raw) {
+        Some(c) => {
+            wwv.call_de = check_existence_str(&c, RegexWwvCaptureIds::CallDe as u32)?;
+            wwv.utc = check_existence_num(&c, RegexWwvCaptureIds::Utc as u32)?;
+            wwv.sfi = check_existence_num(&c, RegexWwvCaptureIds::Sfi as u32)?;
+            wwv.a = check_existence_num(&c, RegexWwvCaptureIds::A as u32)?;
+            wwv.k = check_existence_num(&c, RegexWwvCaptureIds::K as u32)?;
+            wwv.info1 = check_existence_str(&c, RegexWwvCaptureIds::Info1 as u32)?;
+            wwv.info2 = check_existence_str(&c, RegexWwvCaptureIds::Info2 as u32)?;
+
+            Ok(SpotType::WWV(wwv))
+        }
+        None => Err(ParseError::InvalidContent)
+    }
+}
+
 fn check_existence_num<T>(cap: &Captures, id: u32) -> Result<T, ParseError>
 where
     T: std::str::FromStr,
@@ -149,13 +195,17 @@ fn check_existence_str_opt(cap: &Captures, id: u32) -> Option<String> {
 }
 
 fn main() {
-    let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
+    //let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
+    let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
 
     match parse(input) {
         Ok(spot) => {
             match &spot {
                 SpotType::DX(dx) => {
                     println!("Found DX spot from {}", dx.call_de)
+                }
+                SpotType::WWV(wwv) => {
+                    println!("Found WWV spot from {}", wwv.call_de)
                 }
                 _ => {
                     println!("Unknown SpotType found");
