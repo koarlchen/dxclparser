@@ -4,12 +4,8 @@ use std::fmt;
 #[macro_use]
 extern crate lazy_static;
 
-trait Spot {
-    fn new() -> Self;
-}
-
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub enum SpotType {
+pub enum Spot {
     DX(DX),
     WWV(WWV),
     WCY(WCY),
@@ -18,7 +14,7 @@ pub enum SpotType {
     ToLocal(ToLocal),
 }
 
-impl SpotType {
+impl Spot {
     pub fn to_json(&self) -> String {
         serde_json::to_string(&self).unwrap()
     }
@@ -34,7 +30,7 @@ pub struct DX {
     pub comment: Option<String>,
 }
 
-impl Spot for DX {
+impl DX {
     fn new() -> DX {
         DX {
             call_de: String::new(),
@@ -67,7 +63,7 @@ pub struct WWV {
     pub info2: String,
 }
 
-impl Spot for WWV {
+impl WWV {
     fn new() -> WWV {
         WWV {
             call_de: String::new(),
@@ -105,7 +101,7 @@ pub struct WCY {
     pub au: String,
 }
 
-impl Spot for WCY {
+impl WCY {
     fn new() -> WCY {
         WCY {
             call_de: String::new(),
@@ -141,7 +137,7 @@ pub struct WX {
     pub msg: Option<String>,
 }
 
-impl Spot for WX {
+impl WX {
     fn new() -> WX {
         WX {
             call_de: String::new(),
@@ -161,7 +157,7 @@ pub struct ToAll {
     pub msg: Option<String>,
 }
 
-impl Spot for ToAll {
+impl ToAll {
     fn new() -> ToAll {
         ToAll {
             call_de: String::new(),
@@ -182,7 +178,7 @@ pub struct ToLocal {
     pub msg: Option<String>,
 }
 
-impl Spot for ToLocal {
+impl ToLocal {
     fn new() -> ToLocal {
         ToLocal {
             call_de: String::new(),
@@ -212,36 +208,36 @@ impl fmt::Display for ParseError {
     }
 }
 
-pub fn parse(raw: &str) -> Result<SpotType, ParseError> {
+pub fn parse(raw: &str) -> Result<Spot, ParseError> {
     match ident_type(raw)? {
-        SpotType::DX(dx) => parse_dx(raw, dx),
-        SpotType::WWV(wwv) => parse_wwv(raw, wwv),
-        SpotType::WCY(wcy) => parse_wcy(raw, wcy),
-        SpotType::WX(wx) => parse_wx(raw, wx),
-        SpotType::ToAll(ta) => parse_toall(raw, ta),
-        SpotType::ToLocal(tl) => parse_tolocal(raw, tl),
+        Spot::DX(dx) => parse_dx(raw, dx),
+        Spot::WWV(wwv) => parse_wwv(raw, wwv),
+        Spot::WCY(wcy) => parse_wcy(raw, wcy),
+        Spot::WX(wx) => parse_wx(raw, wx),
+        Spot::ToAll(ta) => parse_toall(raw, ta),
+        Spot::ToLocal(tl) => parse_tolocal(raw, tl),
     }
 }
 
-fn ident_type(input: &str) -> Result<SpotType, ParseError> {
+fn ident_type(input: &str) -> Result<Spot, ParseError> {
     if input.starts_with("DX de") {
-        Ok(SpotType::DX(DX::new()))
+        Ok(Spot::DX(DX::new()))
     } else if input.starts_with("WWV de") {
-        Ok(SpotType::WWV(WWV::new()))
+        Ok(Spot::WWV(WWV::new()))
     } else if input.starts_with("WCY de") {
-        Ok(SpotType::WCY(WCY::new()))
+        Ok(Spot::WCY(WCY::new()))
     } else if input.starts_with("WX de") {
-        Ok(SpotType::WX(WX::new()))
+        Ok(Spot::WX(WX::new()))
     } else if input.starts_with("To ALL de") {
-        Ok(SpotType::ToAll(ToAll::new()))
+        Ok(Spot::ToAll(ToAll::new()))
     } else if input.starts_with("To LOCAL de") || input.starts_with("To Local de") {
-        Ok(SpotType::ToLocal(ToLocal::new()))
+        Ok(Spot::ToLocal(ToLocal::new()))
     } else {
         Err(ParseError::UnknownType)
     }
 }
 
-fn parse_dx(raw: &str, mut dx: DX) -> Result<SpotType, ParseError> {
+fn parse_dx(raw: &str, mut dx: DX) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_DX: Regex = Regex::new(r#"(^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$)"#).unwrap();
     }
@@ -256,13 +252,13 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<SpotType, ParseError> {
             dx.loc = check_existence_str_opt(&c, RegexDxCaptureIds::Loc as u32);
             dx.comment = check_existence_str_opt(&c, RegexDxCaptureIds::Comment as u32);
 
-            Ok(SpotType::DX(dx))
+            Ok(Spot::DX(dx))
         }
         None => Err(ParseError::InvalidContent),
     }
 }
 
-fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<SpotType, ParseError> {
+fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_WWV: Regex = Regex::new(r#"(^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$)"#).unwrap();
     }
@@ -277,13 +273,13 @@ fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<SpotType, ParseError> {
             wwv.info1 = check_existence_str(&c, RegexWwvCaptureIds::Info1 as u32)?;
             wwv.info2 = check_existence_str(&c, RegexWwvCaptureIds::Info2 as u32)?;
 
-            Ok(SpotType::WWV(wwv))
+            Ok(Spot::WWV(wwv))
         }
         None => Err(ParseError::InvalidContent),
     }
 }
 
-fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<SpotType, ParseError> {
+fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_WCY: Regex = Regex::new(r#"(^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$)"#).unwrap();
     }
@@ -301,13 +297,13 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<SpotType, ParseError> {
             wcy.gmf = check_existence_str(&c, RegexWcyCaptureIds::Gmf as u32)?;
             wcy.au = check_existence_str(&c, RegexWcyCaptureIds::Au as u32)?;
 
-            Ok(SpotType::WCY(wcy))
+            Ok(Spot::WCY(wcy))
         }
         None => Err(ParseError::InvalidContent),
     }
 }
 
-fn parse_wx(raw: &str, mut wx: WX) -> Result<SpotType, ParseError> {
+fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_WX: Regex = Regex::new(r#"(^(WX de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
     }
@@ -317,13 +313,13 @@ fn parse_wx(raw: &str, mut wx: WX) -> Result<SpotType, ParseError> {
             wx.call_de = check_existence_str(&c, RegexWxCaptureIds::CallDe as u32)?;
             wx.msg = check_existence_str_opt(&c, RegexWxCaptureIds::Msg as u32);
 
-            Ok(SpotType::WX(wx))
+            Ok(Spot::WX(wx))
         }
         None => Err(ParseError::InvalidContent),
     }
 }
 
-fn parse_toall(raw: &str, mut ta: ToAll) -> Result<SpotType, ParseError> {
+fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_TOALL: Regex =
             Regex::new(r#"(^(To ALL de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
@@ -334,13 +330,13 @@ fn parse_toall(raw: &str, mut ta: ToAll) -> Result<SpotType, ParseError> {
             ta.call_de = check_existence_str(&c, RegexToAllCaptureIds::CallDe as u32)?;
             ta.msg = check_existence_str_opt(&c, RegexToAllCaptureIds::Msg as u32);
 
-            Ok(SpotType::ToAll(ta))
+            Ok(Spot::ToAll(ta))
         }
         None => Err(ParseError::InvalidContent),
     }
 }
 
-fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<SpotType, ParseError> {
+fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_TOLOCAL: Regex = Regex::new(
             r#"(^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$)"#
@@ -354,7 +350,7 @@ fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<SpotType, ParseError> {
             tl.msg = check_existence_str_opt(&c, RegexToLocalCaptureIds::Msg as u32);
             tl.utc = check_existence_num_opt(&c, RegexToLocalCaptureIds::Utc as u32)?;
 
-            Ok(SpotType::ToLocal(tl))
+            Ok(Spot::ToLocal(tl))
         }
         None => Err(ParseError::InvalidContent),
     }
@@ -409,7 +405,7 @@ mod tests {
         let spot =
             "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
         let res = parse(spot);
-        let exp = SpotType::DX(DX {
+        let exp = Spot::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
             freq: 18160000,
@@ -431,7 +427,7 @@ mod tests {
     fn dx_missing_loc() {
         let spot = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z";
         let res = parse(spot);
-        let exp = SpotType::DX(DX {
+        let exp = Spot::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
             freq: 18160000,
@@ -447,7 +443,7 @@ mod tests {
         let spot =
             "DX de DF2MX:     18160.0  DL8AW/P                                     2259Z RF80";
         let res = parse(spot);
-        let exp = SpotType::DX(DX {
+        let exp = Spot::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
             freq: 18160000,
@@ -491,7 +487,7 @@ mod tests {
     fn wwv_valid() {
         let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
         let res = parse(spot);
-        let exp = SpotType::WWV(WWV {
+        let exp = Spot::WWV(WWV {
             call_de: "VE7CC".into(),
             utc: 0,
             sfi: 69,
@@ -606,7 +602,7 @@ mod tests {
     fn wcy_valid() {
         let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
         let res = parse(spot);
-        let exp = SpotType::WCY(WCY {
+        let exp = Spot::WCY(WCY {
             call_de: "DK0WCY-1".into(),
             utc: 23,
             k: 2,
@@ -766,7 +762,7 @@ mod tests {
     fn wx_valid() {
         let spot = "WX de OZ4AEC: FULL";
         let res = parse(spot);
-        let exp = SpotType::WX(WX {
+        let exp = Spot::WX(WX {
             call_de: "OZ4AEC".into(),
             msg: Some("FULL".into()),
         });
@@ -804,7 +800,7 @@ mod tests {
     fn toall_valid() {
         let spot = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
         let res = parse(spot);
-        let exp = SpotType::ToAll(ToAll {
+        let exp = Spot::ToAll(ToAll {
             call_de: "SV5FRI-1".into(),
             msg: Some("SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300".into()),
         });
@@ -842,7 +838,7 @@ mod tests {
     fn tolocal_valid_lower_case() {
         let spot = "To Local de N5UXT <1405Z> : rebooting";
         let res = parse(spot);
-        let exp = SpotType::ToLocal(ToLocal {
+        let exp = Spot::ToLocal(ToLocal {
             call_de: "N5UXT".into(),
             utc: Some(1405),
             msg: Some("rebooting".into()),
@@ -854,7 +850,7 @@ mod tests {
     fn tolocal_valid_upper_case() {
         let spot = "To LOCAL de N5UXT <1405Z> : rebooting";
         let res = parse(spot);
-        let exp = SpotType::ToLocal(ToLocal {
+        let exp = Spot::ToLocal(ToLocal {
             call_de: "N5UXT".into(),
             utc: Some(1405),
             msg: Some("rebooting".into()),
