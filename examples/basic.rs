@@ -18,7 +18,7 @@ fn main() {
                 retval = 0;
             }
             Err(e) => {
-                println!("Failed to parse spot ({})", e);
+                eprintln!("Failed to parse spot ({})", e);
                 retval = 1;
             }
         }
