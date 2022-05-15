@@ -4,17 +4,30 @@ use std::fmt;
 #[macro_use]
 extern crate lazy_static;
 
+/// Structured representation of a parsed spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum Spot {
+    /// Spot of the type DX
     DX(DX),
+
+    /// Spot of the type WWV
     WWV(WWV),
+
+    /// Spot of the type WCY
     WCY(WCY),
+
+    /// Spot of the type WX
     WX(WX),
+
+    /// Spot of the type ToAll
     ToAll(ToAll),
+
+    /// Spot of the type ToLocal
     ToLocal(ToLocal),
 }
 
 impl Spot {
+    /// Convert structured spot into its corresponding json format
     pub fn to_json(&self) -> String {
         serde_json::to_string(&self).unwrap()
     }
@@ -194,11 +207,19 @@ enum RegexToLocalCaptureIds {
     Msg = 5,
 }
 
+/// Possible errors while parsing spot
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
+    /// Unknown type of spot
     UnknownType,
+
+    /// The content of the spot does not match the detected type
     InvalidContent,
+
+    /// Required field of the spot is missing
     MissingField,
+
+    /// Internal error occurred while parsing
     InternalError,
 }
 
@@ -208,6 +229,16 @@ impl fmt::Display for ParseError {
     }
 }
 
+/// Parse a spot received from a DX Cluster into a struct.
+///
+/// ## Arguments
+///
+/// * `raw`: A raw spot that is already cleaned from newline or bell characters etc.
+///
+/// # Result
+///
+/// In case the spot was parsed successfully, the structure containing the spot shall be returned.
+/// In case of a error the occurred error shall be returned.
 pub fn parse(raw: &str) -> Result<Spot, ParseError> {
     match ident_type(raw)? {
         Spot::DX(dx) => parse_dx(raw, dx),
