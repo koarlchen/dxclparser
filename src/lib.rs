@@ -9,7 +9,7 @@ trait Spot {
 }
 
 #[derive(Serialize, Deserialize)]
-enum SpotType {
+pub enum SpotType {
     DX(DX),
     WWV(WWV),
     WCY(WCY),
@@ -18,14 +18,20 @@ enum SpotType {
     ToLocal(ToLocal),
 }
 
+impl SpotType {
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-struct DX {
-    call_de: String,
-    call_dx: String,
-    freq: f32,
-    utc: u16,
-    loc: Option<String>,
-    comment: Option<String>,
+pub struct DX {
+    pub call_de: String,
+    pub call_dx: String,
+    pub freq: f32,
+    pub utc: u16,
+    pub loc: Option<String>,
+    pub comment: Option<String>,
 }
 
 impl Spot for DX {
@@ -51,14 +57,14 @@ enum RegexDxCaptureIds {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct WWV {
-    call_de: String,
-    utc: u8,
-    sfi: u16,
-    a: u16,
-    k: u16,
-    info1: String,
-    info2: String,
+pub struct WWV {
+    pub call_de: String,
+    pub utc: u8,
+    pub sfi: u16,
+    pub a: u16,
+    pub k: u16,
+    pub info1: String,
+    pub info2: String,
 }
 
 impl Spot for WWV {
@@ -86,17 +92,17 @@ enum RegexWwvCaptureIds {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct WCY {
-    call_de: String,
-    utc: u8,
-    k: u16,
-    expk: u16,
-    a: u16,
-    r: u16,
-    sfi: u16,
-    sa: String,
-    gmf: String,
-    au: String,
+pub struct WCY {
+    pub call_de: String,
+    pub utc: u8,
+    pub k: u16,
+    pub expk: u16,
+    pub a: u16,
+    pub r: u16,
+    pub sfi: u16,
+    pub sa: String,
+    pub gmf: String,
+    pub au: String,
 }
 
 impl Spot for WCY {
@@ -130,9 +136,9 @@ enum RegexWcyCaptureIds {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct WX {
-    call_de: String,
-    msg: Option<String>,
+pub struct WX {
+    pub call_de: String,
+    pub msg: Option<String>,
 }
 
 impl Spot for WX {
@@ -151,8 +157,8 @@ enum RegexWxCaptureIds {
 
 #[derive(Serialize, Deserialize)]
 pub struct ToAll {
-    call_de: String,
-    msg: Option<String>,
+    pub call_de: String,
+    pub msg: Option<String>,
 }
 
 impl Spot for ToAll {
@@ -171,9 +177,9 @@ enum RegexToAllCaptureIds {
 
 #[derive(Serialize, Deserialize)]
 pub struct ToLocal {
-    call_de: String,
-    utc: Option<u16>,
-    msg: Option<String>,
+    pub call_de: String,
+    pub utc: Option<u16>,
+    pub msg: Option<String>,
 }
 
 impl Spot for ToLocal {
@@ -193,7 +199,7 @@ enum RegexToLocalCaptureIds {
 }
 
 #[derive(Debug)]
-enum ParseError {
+pub enum ParseError {
     UnknownType,
     InvalidContent,
     MissingField,
@@ -203,6 +209,17 @@ enum ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Error while parsing: {:?}", self)
+    }
+}
+
+pub fn parse(raw: &str) -> Result<SpotType, ParseError> {
+    match ident_type(raw)? {
+        SpotType::DX(dx) => parse_dx(raw, dx),
+        SpotType::WWV(wwv) => parse_wwv(raw, wwv),
+        SpotType::WCY(wcy) => parse_wcy(raw, wcy),
+        SpotType::WX(wx) => parse_wx(raw, wx),
+        SpotType::ToAll(ta) => parse_toall(raw, ta),
+        SpotType::ToLocal(tl) => parse_tolocal(raw, tl),
     }
 }
 
@@ -221,17 +238,6 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
         Ok(SpotType::ToLocal(ToLocal::new()))
     } else {
         Err(ParseError::UnknownType)
-    }
-}
-
-fn parse(raw: &str) -> Result<SpotType, ParseError> {
-    match ident_type(raw)? {
-        SpotType::DX(dx) => parse_dx(raw, dx),
-        SpotType::WWV(wwv) => parse_wwv(raw, wwv),
-        SpotType::WCY(wcy) => parse_wcy(raw, wcy),
-        SpotType::WX(wx) => parse_wx(raw, wx),
-        SpotType::ToAll(ta) => parse_toall(raw, ta),
-        SpotType::ToLocal(tl) => parse_tolocal(raw, tl),
     }
 }
 
@@ -390,43 +396,4 @@ fn check_existence_str(cap: &Captures, id: u32) -> Result<String, ParseError> {
 fn check_existence_str_opt(cap: &Captures, id: u32) -> Option<String> {
     cap.get(id.try_into().unwrap())
         .map(|val| String::from(val.as_str()))
-}
-
-fn main() {
-    //let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
-    //let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
-    //let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
-    //let input = "WX de OZ4AEC: FULL";
-    //let input = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
-    let input = "To Local de N5UXT <1405Z> : rebooting";
-
-    match parse(input) {
-        Ok(spot) => {
-            match &spot {
-                SpotType::DX(dx) => {
-                    println!("Found DX spot from {}", dx.call_de)
-                }
-                SpotType::WWV(wwv) => {
-                    println!("Found WWV spot from {}", wwv.call_de)
-                }
-                SpotType::WCY(wcy) => {
-                    println!("Found WCY spot from {}", wcy.call_de)
-                }
-                SpotType::WX(wx) => {
-                    println!("Found WX spot from {}", wx.call_de)
-                }
-                SpotType::ToAll(ta) => {
-                    println!("Found ToAll spot from {}", ta.call_de)
-                }
-                SpotType::ToLocal(tl) => {
-                    println!("Found ToLocal spot from {}", tl.call_de)
-                }
-            }
-
-            println!("{}", serde_json::to_string(&spot).unwrap());
-        }
-        Err(e) => {
-            eprintln!("{}", e);
-        }
-    }
 }
