@@ -13,7 +13,7 @@ enum SpotType {
     DX(DX),
     WWV(WWV),
     WCY(WCY),
-    WX,
+    WX(WX),
     ToAll,
     ToLocal,
 }
@@ -129,6 +129,26 @@ enum RegexWcyCaptureIds {
     Au = 12,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct WX {
+    call_de: String,
+    msg: Option<String>,
+}
+
+impl Spot for WX {
+    fn new() -> WX {
+        WX {
+            call_de: String::new(),
+            msg: None,
+        }
+    }
+}
+
+enum RegexWxCaptureIds {
+    CallDe = 3,
+    Msg = 4,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -151,7 +171,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
     } else if input.starts_with("WCY de") {
         Ok(SpotType::WCY(WCY::new()))
     } else if input.starts_with("WX de") {
-        Ok(SpotType::WX)
+        Ok(SpotType::WX(WX::new()))
     } else if input.starts_with("To ALL de") {
         Ok(SpotType::ToAll)
     } else if input.starts_with("To LOCAL de") || input.starts_with("To Local de") {
@@ -166,9 +186,7 @@ fn parse(raw: &str) -> Result<SpotType, ParseError> {
         SpotType::DX(dx) => parse_dx(raw, dx),
         SpotType::WWV(wwv) => parse_wwv(raw, wwv),
         SpotType::WCY(wcy) => parse_wcy(raw, wcy),
-        SpotType::WX => {
-            todo!()
-        }
+        SpotType::WX(wx) => parse_wx(raw, wx),
         SpotType::ToAll => {
             todo!()
         }
@@ -243,6 +261,22 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<SpotType, ParseError> {
     }
 }
 
+fn parse_wx(raw: &str, mut wx: WX) -> Result<SpotType, ParseError> {
+    lazy_static! {
+        static ref RE_WX: Regex = Regex::new(r#"(^(WX de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
+    }
+
+    match RE_WX.captures(raw) {
+        Some(c) => {
+            wx.call_de = check_existence_str(&c, RegexWxCaptureIds::CallDe as u32)?;
+            wx.msg = check_existence_str_opt(&c, RegexWxCaptureIds::Msg as u32);
+
+            Ok(SpotType::WX(wx))
+        }
+        None => Err(ParseError::InvalidContent),
+    }
+}
+
 fn check_existence_num<T>(cap: &Captures, id: u32) -> Result<T, ParseError>
 where
     T: std::str::FromStr,
@@ -271,7 +305,8 @@ fn check_existence_str_opt(cap: &Captures, id: u32) -> Option<String> {
 fn main() {
     //let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
     //let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
-    let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+    //let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+    let input = "WX de OZ4AEC: FULL";
 
     match parse(input) {
         Ok(spot) => {
@@ -284,6 +319,9 @@ fn main() {
                 }
                 SpotType::WCY(wcy) => {
                     println!("Found WCY spot from {}", wcy.call_de)
+                }
+                SpotType::WX(wx) => {
+                    println!("Found WX spot from {}", wx.call_de)
                 }
                 _ => {
                     println!("Unknown SpotType found");
