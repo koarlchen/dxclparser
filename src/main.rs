@@ -14,7 +14,7 @@ enum SpotType {
     WWV(WWV),
     WCY(WCY),
     WX(WX),
-    ToAll,
+    ToAll(ToAll),
     ToLocal,
 }
 
@@ -149,6 +149,26 @@ enum RegexWxCaptureIds {
     Msg = 4,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ToAll {
+    call_de: String,
+    msg: Option<String>,
+}
+
+impl Spot for ToAll {
+    fn new() -> ToAll {
+        ToAll {
+            call_de: String::new(),
+            msg: None,
+        }
+    }
+}
+
+enum RegexToAllCaptureIds {
+    CallDe = 3,
+    Msg = 4,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -173,7 +193,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
     } else if input.starts_with("WX de") {
         Ok(SpotType::WX(WX::new()))
     } else if input.starts_with("To ALL de") {
-        Ok(SpotType::ToAll)
+        Ok(SpotType::ToAll(ToAll::new()))
     } else if input.starts_with("To LOCAL de") || input.starts_with("To Local de") {
         Ok(SpotType::ToLocal)
     } else {
@@ -187,9 +207,7 @@ fn parse(raw: &str) -> Result<SpotType, ParseError> {
         SpotType::WWV(wwv) => parse_wwv(raw, wwv),
         SpotType::WCY(wcy) => parse_wcy(raw, wcy),
         SpotType::WX(wx) => parse_wx(raw, wx),
-        SpotType::ToAll => {
-            todo!()
-        }
+        SpotType::ToAll(ta) => parse_toall(raw, ta),
         SpotType::ToLocal => {
             todo!()
         }
@@ -277,6 +295,23 @@ fn parse_wx(raw: &str, mut wx: WX) -> Result<SpotType, ParseError> {
     }
 }
 
+fn parse_toall(raw: &str, mut ta: ToAll) -> Result<SpotType, ParseError> {
+    lazy_static! {
+        static ref RE_TOALL: Regex =
+            Regex::new(r#"(^(To ALL de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
+    }
+
+    match RE_TOALL.captures(raw) {
+        Some(c) => {
+            ta.call_de = check_existence_str(&c, RegexToAllCaptureIds::CallDe as u32)?;
+            ta.msg = check_existence_str_opt(&c, RegexToAllCaptureIds::Msg as u32);
+
+            Ok(SpotType::ToAll(ta))
+        }
+        None => Err(ParseError::InvalidContent),
+    }
+}
+
 fn check_existence_num<T>(cap: &Captures, id: u32) -> Result<T, ParseError>
 where
     T: std::str::FromStr,
@@ -306,7 +341,8 @@ fn main() {
     //let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
     //let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
     //let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
-    let input = "WX de OZ4AEC: FULL";
+    //let input = "WX de OZ4AEC: FULL";
+    let input = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
 
     match parse(input) {
         Ok(spot) => {
@@ -322,6 +358,9 @@ fn main() {
                 }
                 SpotType::WX(wx) => {
                     println!("Found WX spot from {}", wx.call_de)
+                }
+                SpotType::ToAll(ta) => {
+                    println!("Found ToAll spot from {}", ta.call_de)
                 }
                 _ => {
                     println!("Unknown SpotType found");
