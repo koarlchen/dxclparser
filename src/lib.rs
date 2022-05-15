@@ -28,7 +28,7 @@ impl SpotType {
 pub struct DX {
     pub call_de: String,
     pub call_dx: String,
-    pub freq: f32,
+    pub freq: u64,
     pub utc: u16,
     pub loc: Option<String>,
     pub comment: Option<String>,
@@ -39,7 +39,7 @@ impl Spot for DX {
         DX {
             call_de: String::new(),
             call_dx: String::new(),
-            freq: 0.0,
+            freq: 0,
             utc: 0,
             loc: None,
             comment: None,
@@ -250,7 +250,8 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<SpotType, ParseError> {
         Some(c) => {
             dx.call_de = check_existence_str(&c, RegexDxCaptureIds::CallDe as u32)?;
             dx.call_dx = check_existence_str(&c, RegexDxCaptureIds::CallDx as u32)?;
-            dx.freq = check_existence_num(&c, RegexDxCaptureIds::Freq as u32)?;
+            dx.freq =
+                (check_existence_num::<f64>(&c, RegexDxCaptureIds::Freq as u32)? * 1000.0) as u64;
             dx.utc = check_existence_num(&c, RegexDxCaptureIds::Utc as u32)?;
             dx.loc = check_existence_str_opt(&c, RegexDxCaptureIds::Loc as u32);
             dx.comment = check_existence_str_opt(&c, RegexDxCaptureIds::Comment as u32);
@@ -413,7 +414,7 @@ mod tests {
         let exp = SpotType::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
-            freq: 18160.0,
+            freq: 18160000,
             utc: 2259,
             loc: Some("RF80".into()),
             comment: Some("EU-156 Tombelaine Isl.".into()),
@@ -440,7 +441,7 @@ mod tests {
         let exp = SpotType::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
-            freq: 18160.0,
+            freq: 18160000,
             utc: 2259,
             loc: None,
             comment: Some("EU-156 Tombelaine Isl.".into()),
@@ -459,7 +460,7 @@ mod tests {
         let exp = SpotType::DX(DX {
             call_de: "DF2MX".into(),
             call_dx: "DL8AW/P".into(),
-            freq: 18160.0,
+            freq: 18160000,
             utc: 2259,
             loc: Some("RF80".into()),
             comment: None,
