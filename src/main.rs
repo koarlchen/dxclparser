@@ -12,7 +12,7 @@ trait Spot {
 enum SpotType {
     DX(DX),
     WWV(WWV),
-    WCY,
+    WCY(WCY),
     WX,
     ToAll,
     ToLocal,
@@ -85,6 +85,50 @@ enum RegexWwvCaptureIds {
     Info2 = 9,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct WCY {
+    call_de: String,
+    utc: u8,
+    k: u16,
+    expk: u16,
+    a: u16,
+    r: u16,
+    sfi: u16,
+    sa: String,
+    gmf: String,
+    au: String,
+}
+
+impl Spot for WCY {
+    fn new() -> WCY {
+        WCY {
+            call_de: String::new(),
+            utc: 0,
+            k: 0,
+            expk: 0,
+            a: 0,
+            r: 0,
+            sfi: 0,
+            sa: String::new(),
+            gmf: String::new(),
+            au: String::new(),
+        }
+    }
+}
+
+enum RegexWcyCaptureIds {
+    CallDe = 3,
+    Utc = 4,
+    K = 5,
+    Expk = 6,
+    A = 7,
+    R = 8,
+    Sfi = 9,
+    Sa = 10,
+    Gmf = 11,
+    Au = 12,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -105,7 +149,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
     } else if input.starts_with("WWV de") {
         Ok(SpotType::WWV(WWV::new()))
     } else if input.starts_with("WCY de") {
-        Ok(SpotType::WCY)
+        Ok(SpotType::WCY(WCY::new()))
     } else if input.starts_with("WX de") {
         Ok(SpotType::WX)
     } else if input.starts_with("To ALL de") {
@@ -121,9 +165,7 @@ fn parse(raw: &str) -> Result<SpotType, ParseError> {
     match ident_type(raw)? {
         SpotType::DX(dx) => parse_dx(raw, dx),
         SpotType::WWV(wwv) => parse_wwv(raw, wwv),
-        SpotType::WCY => {
-            todo!()
-        }
+        SpotType::WCY(wcy) => parse_wcy(raw, wcy),
         SpotType::WX => {
             todo!()
         }
@@ -177,6 +219,30 @@ fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<SpotType, ParseError> {
     }
 }
 
+fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<SpotType, ParseError> {
+    lazy_static! {
+        static ref RE_WCY: Regex = Regex::new(r#"(^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$)"#).unwrap();
+    }
+
+    match RE_WCY.captures(raw) {
+        Some(c) => {
+            wcy.call_de = check_existence_str(&c, RegexWcyCaptureIds::CallDe as u32)?;
+            wcy.utc = check_existence_num(&c, RegexWcyCaptureIds::Utc as u32)?;
+            wcy.k = check_existence_num(&c, RegexWcyCaptureIds::K as u32)?;
+            wcy.expk = check_existence_num(&c, RegexWcyCaptureIds::Expk as u32)?;
+            wcy.a = check_existence_num(&c, RegexWcyCaptureIds::A as u32)?;
+            wcy.r = check_existence_num(&c, RegexWcyCaptureIds::R as u32)?;
+            wcy.sfi = check_existence_num(&c, RegexWcyCaptureIds::Sfi as u32)?;
+            wcy.sa = check_existence_str(&c, RegexWcyCaptureIds::Sa as u32)?;
+            wcy.gmf = check_existence_str(&c, RegexWcyCaptureIds::Gmf as u32)?;
+            wcy.au = check_existence_str(&c, RegexWcyCaptureIds::Au as u32)?;
+
+            Ok(SpotType::WCY(wcy))
+        }
+        None => Err(ParseError::InvalidContent),
+    }
+}
+
 fn check_existence_num<T>(cap: &Captures, id: u32) -> Result<T, ParseError>
 where
     T: std::str::FromStr,
@@ -204,7 +270,8 @@ fn check_existence_str_opt(cap: &Captures, id: u32) -> Option<String> {
 
 fn main() {
     //let input = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
-    let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+    //let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+    let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
 
     match parse(input) {
         Ok(spot) => {
@@ -215,6 +282,9 @@ fn main() {
                 SpotType::WWV(wwv) => {
                     println!("Found WWV spot from {}", wwv.call_de)
                 }
+                SpotType::WCY(wcy) => {
+                    println!("Found WCY spot from {}", wcy.call_de)
+                }
                 _ => {
                     println!("Unknown SpotType found");
                 }
@@ -223,7 +293,7 @@ fn main() {
             println!("{}", serde_json::to_string(&spot).unwrap());
         }
         Err(e) => {
-            eprint!("{}", e);
+            eprintln!("{}", e);
         }
     }
 }
