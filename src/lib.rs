@@ -8,7 +8,7 @@ trait Spot {
     fn new() -> Self;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum SpotType {
     DX(DX),
     WWV(WWV),
@@ -24,7 +24,7 @@ impl SpotType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct DX {
     pub call_de: String,
     pub call_dx: String,
@@ -56,7 +56,7 @@ enum RegexDxCaptureIds {
     Loc = 8,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WWV {
     pub call_de: String,
     pub utc: u8,
@@ -91,7 +91,7 @@ enum RegexWwvCaptureIds {
     Info2 = 9,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WCY {
     pub call_de: String,
     pub utc: u8,
@@ -135,7 +135,7 @@ enum RegexWcyCaptureIds {
     Au = 12,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WX {
     pub call_de: String,
     pub msg: Option<String>,
@@ -155,7 +155,7 @@ enum RegexWxCaptureIds {
     Msg = 4,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ToAll {
     pub call_de: String,
     pub msg: Option<String>,
@@ -175,7 +175,7 @@ enum RegexToAllCaptureIds {
     Msg = 4,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ToLocal {
     pub call_de: String,
     pub utc: Option<u16>,
@@ -198,7 +198,7 @@ enum RegexToLocalCaptureIds {
     Msg = 5,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     UnknownType,
     InvalidContent,
@@ -396,4 +396,75 @@ fn check_existence_str(cap: &Captures, id: u32) -> Result<String, ParseError> {
 fn check_existence_str_opt(cap: &Captures, id: u32) -> Option<String> {
     cap.get(id.try_into().unwrap())
         .map(|val| String::from(val.as_str()))
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::*;
+
+    #[test]
+    fn dx_valid() {
+        let spot =
+            "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
+
+        let res = parse(spot);
+
+        let exp = SpotType::DX(DX {
+            call_de: "DF2MX".into(),
+            call_dx: "DL8AW/P".into(),
+            freq: 18160.0,
+            utc: 2259,
+            loc: Some("RF80".into()),
+            comment: Some("EU-156 Tombelaine Isl.".into()),
+        });
+
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn dx_only_type() {
+        let spot = "DX de DF2MX";
+
+        let res = parse(spot);
+
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn dx_missing_loc() {
+        let spot = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z";
+
+        let res = parse(spot);
+
+        let exp = SpotType::DX(DX {
+            call_de: "DF2MX".into(),
+            call_dx: "DL8AW/P".into(),
+            freq: 18160.0,
+            utc: 2259,
+            loc: None,
+            comment: Some("EU-156 Tombelaine Isl.".into()),
+        });
+
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn dx_missing_comment() {
+        let spot =
+            "DX de DF2MX:     18160.0  DL8AW/P                                     2259Z RF80";
+
+        let res = parse(spot);
+
+        let exp = SpotType::DX(DX {
+            call_de: "DF2MX".into(),
+            call_dx: "DL8AW/P".into(),
+            freq: 18160.0,
+            utc: 2259,
+            loc: Some("RF80".into()),
+            comment: None,
+        });
+
+        assert_eq!(res, Ok(exp));
+    }
 }
