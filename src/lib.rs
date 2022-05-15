@@ -799,4 +799,42 @@ mod tests {
     //     });
     //     assert_eq!(res, Ok(exp));
     // }
+
+    #[test]
+    fn toall_valid() {
+        let spot = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
+        let res = parse(spot);
+        let exp = SpotType::ToAll(ToAll {
+            call_de: "SV5FRI-1".into(),
+            msg: Some("SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn toall_only_type() {
+        let spot = "To ALL de SV5FRI-1";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    // FIXME
+    // #[test]
+    // fn toall_missing_call_de() {
+    //     let spot = "To ALL de         : SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn toall_missing_msg() {
+    //     let spot = "To ALL de SV5FRI-1:";
+    //     let res = parse(spot);
+    //     let exp = SpotType::ToAll(ToAll {
+    //         call_de: "SV5FRI-1".into(),
+    //         msg: None,
+    //     });
+    //     assert_eq!(res, Ok(exp));
+    // }
 }
