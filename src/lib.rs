@@ -761,4 +761,42 @@ mod tests {
         let res = parse(spot);
         assert_eq!(res, Err(ParseError::InvalidContent));
     }
+
+    #[test]
+    fn wx_valid() {
+        let spot = "WX de OZ4AEC: FULL";
+        let res = parse(spot);
+        let exp = SpotType::WX(WX {
+            call_de: "OZ4AEC".into(),
+            msg: Some("FULL".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wx_only_type() {
+        let spot = "WX de OZ4AEC";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    // FIXME
+    // #[test]
+    // fn wx_missing_call_de() {
+    //     let spot = "WX de       : FULL";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn wx_missing_msg() {
+    //     let spot = "WX de OZ4AEC:";
+    //     let res = parse(spot);
+    //     let exp = SpotType::WX(WX {
+    //         call_de: "OZ4AEC".into(),
+    //         msg: None,
+    //     });
+    //     assert_eq!(res, Ok(exp));
+    // }
 }
