@@ -837,4 +837,83 @@ mod tests {
     //     });
     //     assert_eq!(res, Ok(exp));
     // }
+
+    #[test]
+    fn tolocal_valid_lower_case() {
+        let spot = "To Local de N5UXT <1405Z> : rebooting";
+        let res = parse(spot);
+        let exp = SpotType::ToLocal(ToLocal {
+            call_de: "N5UXT".into(),
+            utc: Some(1405),
+            msg: Some("rebooting".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn tolocal_valid_upper_case() {
+        let spot = "To LOCAL de N5UXT <1405Z> : rebooting";
+        let res = parse(spot);
+        let exp = SpotType::ToLocal(ToLocal {
+            call_de: "N5UXT".into(),
+            utc: Some(1405),
+            msg: Some("rebooting".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn tolocal_only_type() {
+        let spot = "To Local de N5UXT";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_call_de() {
+    //     let spot = "To Local de       <1405Z> : rebooting";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_utc1() {
+    //     let spot = "To Local de N5UXT <Z> : rebooting";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_utc2() {
+    //     let spot = "To Local de N5UXT <> : rebooting";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_utc3() {
+    //     let spot = "To Local de N5UXT <1405> : rebooting";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_utc4() {
+    //     let spot = "To Local de N5UXT : rebooting";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    // FIXME
+    // #[test]
+    // fn tolocal_missing_msg() {
+    //     let spot = "To Local de N5UXT <1405Z> :";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
 }
