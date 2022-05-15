@@ -5,6 +5,8 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+/// Reads a file containing multiple spots line by line.
+/// Each successfully parsed spot will be printed to stdout in their json format.
 fn main() {
     let args: Vec<String> = env::args().collect();
 
