@@ -15,7 +15,7 @@ enum SpotType {
     WCY(WCY),
     WX(WX),
     ToAll(ToAll),
-    ToLocal,
+    ToLocal(ToLocal),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -169,6 +169,29 @@ enum RegexToAllCaptureIds {
     Msg = 4,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ToLocal {
+    call_de: String,
+    utc: Option<u16>,
+    msg: Option<String>,
+}
+
+impl Spot for ToLocal {
+    fn new() -> ToLocal {
+        ToLocal {
+            call_de: String::new(),
+            utc: None,
+            msg: None,
+        }
+    }
+}
+
+enum RegexToLocalCaptureIds {
+    CallDe = 3,
+    Utc = 4,
+    Msg = 5,
+}
+
 #[derive(Debug)]
 enum ParseError {
     UnknownType,
@@ -195,7 +218,7 @@ fn ident_type(input: &str) -> Result<SpotType, ParseError> {
     } else if input.starts_with("To ALL de") {
         Ok(SpotType::ToAll(ToAll::new()))
     } else if input.starts_with("To LOCAL de") || input.starts_with("To Local de") {
-        Ok(SpotType::ToLocal)
+        Ok(SpotType::ToLocal(ToLocal::new()))
     } else {
         Err(ParseError::UnknownType)
     }
@@ -208,9 +231,7 @@ fn parse(raw: &str) -> Result<SpotType, ParseError> {
         SpotType::WCY(wcy) => parse_wcy(raw, wcy),
         SpotType::WX(wx) => parse_wx(raw, wx),
         SpotType::ToAll(ta) => parse_toall(raw, ta),
-        SpotType::ToLocal => {
-            todo!()
-        }
+        SpotType::ToLocal(tl) => parse_tolocal(raw, tl),
     }
 }
 
@@ -312,6 +333,26 @@ fn parse_toall(raw: &str, mut ta: ToAll) -> Result<SpotType, ParseError> {
     }
 }
 
+fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<SpotType, ParseError> {
+    lazy_static! {
+        static ref RE_TOLOCAL: Regex = Regex::new(
+            r#"(^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$)"#
+        )
+        .unwrap();
+    }
+
+    match RE_TOLOCAL.captures(raw) {
+        Some(c) => {
+            tl.call_de = check_existence_str(&c, RegexToLocalCaptureIds::CallDe as u32)?;
+            tl.msg = check_existence_str_opt(&c, RegexToLocalCaptureIds::Msg as u32);
+            tl.utc = check_existence_num_opt(&c, RegexToLocalCaptureIds::Utc as u32)?;
+
+            Ok(SpotType::ToLocal(tl))
+        }
+        None => Err(ParseError::InvalidContent),
+    }
+}
+
 fn check_existence_num<T>(cap: &Captures, id: u32) -> Result<T, ParseError>
 where
     T: std::str::FromStr,
@@ -322,6 +363,20 @@ where
             Err(_) => Err(ParseError::InternalError),
         },
         None => Err(ParseError::MissingField),
+    }
+}
+
+fn check_existence_num_opt<T>(cap: &Captures, id: u32) -> Result<Option<T>, ParseError>
+where
+    T: std::str::FromStr,
+{
+    if let Some(val) = cap.get(id.try_into().unwrap()) {
+        match val.as_str().parse::<T>() {
+            Ok(v) => Ok(Some(v)),
+            Err(_) => Err(ParseError::InternalError),
+        }
+    } else {
+        Ok(None)
     }
 }
 
@@ -342,7 +397,8 @@ fn main() {
     //let input = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
     //let input = "WCY de DK0WCY-1 <23> : K=2 expK=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
     //let input = "WX de OZ4AEC: FULL";
-    let input = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
+    //let input = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
+    let input = "To Local de N5UXT <1405Z> : rebooting";
 
     match parse(input) {
         Ok(spot) => {
@@ -362,8 +418,8 @@ fn main() {
                 SpotType::ToAll(ta) => {
                     println!("Found ToAll spot from {}", ta.call_de)
                 }
-                _ => {
-                    println!("Unknown SpotType found");
+                SpotType::ToLocal(tl) => {
+                    println!("Found ToLocal spot from {}", tl.call_de)
                 }
             }
 
