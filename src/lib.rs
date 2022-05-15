@@ -486,4 +486,279 @@ mod tests {
         let res = parse(spot);
         assert_eq!(res, Err(ParseError::InvalidContent));
     }
+
+    #[test]
+    fn wwv_valid() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        let exp = SpotType::WWV(WWV {
+            call_de: "VE7CC".into(),
+            utc: 0,
+            sfi: 69,
+            a: 5,
+            k: 1,
+            info1: "No Storms".into(),
+            info2: "No Storms".into(),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wwv_only_type() {
+        let spot = "WWV de VE7CC";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    // FIXME
+    // #[test]
+    // fn wwv_missing_call_de() {
+    //     let spot = "WWV de       <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    #[test]
+    fn wwv_missing_utc1() {
+        let spot = "WWV de VE7CC <>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_utc2() {
+        let spot = "WWV de VE7CC :   SFI=69, A=5, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_sfi1() {
+        let spot = "WWV de VE7CC <00>:   SFI=, A=5, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_sfi2() {
+        let spot = "WWV de VE7CC <00>:   A=5, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_a1() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_a2() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, K=1, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_k1() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_k2() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, No Storms -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_info1() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, -> No Storms";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_info2() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms ->";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_info12() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, ->";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wwv_missing_info_both() {
+        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1,";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_valid() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        let exp = SpotType::WCY(WCY {
+            call_de: "DK0WCY-1".into(),
+            utc: 23,
+            k: 2,
+            expk: 3,
+            a: 7,
+            r: 26,
+            sfi: 79,
+            sa: "qui".into(),
+            gmf: "qui".into(), // FIXME: remove double "qui"
+            au: "no".into(),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wcy_only_type() {
+        let spot = "WCY de DK0WCY-1";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent))
+    }
+
+    // FIXME
+    // #[test]
+    // fn wcy_missing_call_de() {
+    //     let spot = "WCY de          <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+    //     let res = parse(spot);
+    //     assert_eq!(res, Err(ParseError::InvalidContent));
+    // }
+
+    #[test]
+    fn wcy_missing_utc1() {
+        let spot = "WCY de DK0WCY-1 <> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_utc2() {
+        let spot = "WCY de DK0WCY-1 : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_k1() {
+        let spot = "WCY de DK0WCY-1 <23> : K= expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_k2() {
+        let spot = "WCY de DK0WCY-1 <23> : expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_expk1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK= A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_expk2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_a1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A= R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_a2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 R=26 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_r1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R= SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_r2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 SFI=79 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_sfi1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI= SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_sfi2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SA=qui GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_sa1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA= GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_sa2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 GMF=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_gmf1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_gmf2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF= Au=no";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_au1() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn wcy_missing_au2() {
+        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui";
+        let res = parse(spot);
+        assert_eq!(res, Err(ParseError::InvalidContent));
+    }
 }
