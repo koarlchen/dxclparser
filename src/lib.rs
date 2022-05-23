@@ -517,8 +517,7 @@ mod tests {
 
     #[test]
     fn dx_missing_comment_arcluster() {
-        let spot =
-            "DX de W9KXQ:     14076.0  HB9AOF                                      1629Z";
+        let spot = "DX de W9KXQ:     14076.0  HB9AOF                                      1629Z";
         let res = parse(spot);
         let exp = Spot::DX(DX {
             call_de: "W9KXQ".into(),
@@ -533,8 +532,7 @@ mod tests {
 
     #[test]
     fn dx_missing_comment_cccluster() {
-        let spot =
-            "DX de RK9UE:      7115.0  RK6BP                                       1625Z";
+        let spot = "DX de RK9UE:      7115.0  RK6BP                                       1625Z";
         let res = parse(spot);
         let exp = Spot::DX(DX {
             call_de: "RK9UE".into(),
