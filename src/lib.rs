@@ -432,17 +432,47 @@ mod tests {
     use crate::*;
 
     #[test]
-    fn dx_valid() {
+    fn dx_valid_dxspider() {
         let spot =
-            "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z RF80";
+            "DX de DJ1TO:      3780.0  OH5Z         LSB                            2200Z JO62";
         let res = parse(spot);
         let exp = Spot::DX(DX {
-            call_de: "DF2MX".into(),
-            call_dx: "DL8AW/P".into(),
-            freq: 18160000,
-            utc: 2259,
-            loc: Some("RF80".into()),
-            comment: Some("EU-156 Tombelaine Isl.".into()),
+            call_de: "DJ1TO".into(),
+            call_dx: "OH5Z".into(),
+            freq: 3780000,
+            utc: 2200,
+            loc: Some("JO62".into()),
+            comment: Some("LSB".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn dx_valid_arcluster() {
+        let spot = "DX de N2CQ:      14036.1  W0BH         OK QSO Party: Major            1624Z";
+        let res = parse(spot);
+        let exp = Spot::DX(DX {
+            call_de: "N2CQ".into(),
+            call_dx: "W0BH".into(),
+            freq: 14036100,
+            utc: 1624,
+            loc: None,
+            comment: Some("OK QSO Party: Major".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn dx_valid_cccluster() {
+        let spot = "DX de ZS6WN:     21075.4  CX2DAJ       FT8                            1625Z";
+        let res = parse(spot);
+        let exp = Spot::DX(DX {
+            call_de: "ZS6WN".into(),
+            call_dx: "CX2DAJ".into(),
+            freq: 21075400,
+            utc: 1625,
+            loc: None,
+            comment: Some("FT8".into()),
         });
         assert_eq!(res, Ok(exp));
     }
@@ -455,46 +485,110 @@ mod tests {
     }
 
     #[test]
-    fn dx_missing_loc() {
-        let spot = "DX de DF2MX:     18160.0  DL8AW/P      EU-156 Tombelaine Isl.         2259Z";
+    fn dx_missing_loc_dxspider() {
+        let spot = "DX de KE8GX:     14025.0  3B9FR        599 into N. MI                 1812Z";
         let res = parse(spot);
         let exp = Spot::DX(DX {
-            call_de: "DF2MX".into(),
-            call_dx: "DL8AW/P".into(),
-            freq: 18160000,
-            utc: 2259,
+            call_de: "KE8GX".into(),
+            call_dx: "3B9FR".into(),
+            freq: 14025000,
+            utc: 1812,
             loc: None,
-            comment: Some("EU-156 Tombelaine Isl.".into()),
+            comment: Some("599 into N. MI".into()),
         });
         assert_eq!(res, Ok(exp));
     }
 
     #[test]
-    fn dx_missing_comment() {
+    fn dx_missing_comment_dxspider() {
         let spot =
-            "DX de DF2MX:     18160.0  DL8AW/P                                     2259Z RF80";
+            "DX de OZ1FJB:     3527.6  DL2ASG                                      1815Z JO55";
         let res = parse(spot);
         let exp = Spot::DX(DX {
-            call_de: "DF2MX".into(),
-            call_dx: "DL8AW/P".into(),
-            freq: 18160000,
-            utc: 2259,
-            loc: Some("RF80".into()),
+            call_de: "OZ1FJB".into(),
+            call_dx: "DL2ASG".into(),
+            freq: 3527600,
+            utc: 1815,
+            loc: Some("JO55".into()),
             comment: None,
         });
         assert_eq!(res, Ok(exp));
     }
 
     #[test]
-    fn wwv_valid() {
-        let spot = "WWV de VE7CC <00>:   SFI=69, A=5, K=1, No Storms -> No Storms";
+    fn dx_missing_comment_arcluster() {
+        let spot =
+            "DX de W9KXQ:     14076.0  HB9AOF                                      1629Z";
+        let res = parse(spot);
+        let exp = Spot::DX(DX {
+            call_de: "W9KXQ".into(),
+            call_dx: "HB9AOF".into(),
+            freq: 14076000,
+            utc: 1629,
+            loc: None,
+            comment: None,
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn dx_missing_comment_cccluster() {
+        let spot =
+            "DX de RK9UE:      7115.0  RK6BP                                       1625Z";
+        let res = parse(spot);
+        let exp = Spot::DX(DX {
+            call_de: "RK9UE".into(),
+            call_dx: "RK6BP".into(),
+            freq: 7115000,
+            utc: 1625,
+            loc: None,
+            comment: None,
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wwv_valid_dxspider() {
+        let spot = "WWV de VE7CC <21>:   SFI=70, A=12, K=3, No Storms -> No Storms";
         let res = parse(spot);
         let exp = Spot::WWV(WWV {
             call_de: "VE7CC".into(),
+            utc: 21,
+            sfi: 70,
+            a: 12,
+            k: 3,
+            info1: "No Storms".into(),
+            info2: "No Storms".into(),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wwv_valid_arcluster() {
+        let spot = "WWV de VE7CC <15Z> :   SFI=68, A=9, K=2, No Storms -> Minor w/G1";
+        let res = parse(spot);
+        let exp = Spot::WWV(WWV {
+            call_de: "VE7CC".into(),
+            utc: 15,
+            sfi: 68,
+            a: 9,
+            k: 2,
+            info1: "No Storms".into(),
+            info2: "Minor w/G1".into(),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wwv_valid_cccluster() {
+        let spot = "WWV de AE5E <00>:   SFI=69, A=15, K=4, No Storms -> No Storms";
+        let res = parse(spot);
+        let exp = Spot::WWV(WWV {
+            call_de: "AE5E".into(),
             utc: 0,
             sfi: 69,
-            a: 5,
-            k: 1,
+            a: 15,
+            k: 4,
             info1: "No Storms".into(),
             info2: "No Storms".into(),
         });
@@ -509,19 +603,38 @@ mod tests {
     }
 
     #[test]
-    fn wcy_valid() {
-        let spot = "WCY de DK0WCY-1 <23> : K=2 expK=3 A=7 R=26 SFI=79 SA=qui GMF=qui Au=no";
+    fn wcy_valid_dxspider() {
+        let spot = "WCY de DK0WCY-1 <22> : K=4 expK=2 A=14 R=0 SFI=68 SA=qui GMF=act Au=no";
         let res = parse(spot);
         let exp = Spot::WCY(WCY {
             call_de: "DK0WCY-1".into(),
-            utc: 23,
+            utc: 22,
+            k: 4,
+            expk: 2,
+            a: 14,
+            r: 0,
+            sfi: 68,
+            sa: "qui".into(),
+            gmf: "act".into(),
+            au: "no".into(),
+        });
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn wcy_valid_cccluster() {
+        let spot = "WCY de DK0WCY-1 <17> : K=2 expK=3 A=15 R=0 SFI=68 SA=qui GMF=min Au=no";
+        let res = parse(spot);
+        let exp = Spot::WCY(WCY {
+            call_de: "DK0WCY-1".into(),
+            utc: 17,
             k: 2,
             expk: 3,
-            a: 7,
-            r: 26,
-            sfi: 79,
+            a: 15,
+            r: 0,
+            sfi: 68,
             sa: "qui".into(),
-            gmf: "qui".into(), // FIXME: remove double "qui"
+            gmf: "min".into(),
             au: "no".into(),
         });
         assert_eq!(res, Ok(exp));
@@ -535,15 +648,27 @@ mod tests {
     }
 
     #[test]
-    fn wx_valid() {
-        let spot = "WX de OZ4AEC: FULL";
+    fn wx_valid_dxspider() {
+        let spot = "WX de VA3SAE: va3sub";
         let res = parse(spot);
         let exp = Spot::WX(WX {
-            call_de: "OZ4AEC".into(),
-            msg: Some("FULL".into()),
+            call_de: "VA3SAE".into(),
+            msg: Some("va3sub".into()),
         });
         assert_eq!(res, Ok(exp));
     }
+
+    // FIXME: UTC already detected as comment
+    // #[test]
+    // fn wx_valid_cccluster() {
+    //     let spot = "WX de LA3WAA <1001Z> :  The command WX will send a local weather announcement.  (WX Sunny and Warm)";
+    //     let res = parse(spot);
+    //     let exp = Spot::WX(WX {
+    //         call_de: "LA3WAA".into(),
+    //         msg: Some("The command WX will send a local weather announcement.  (WX Sunny and Warm)".into()),
+    //     });
+    //     assert_eq!(res, Ok(exp));
+    // }
 
     #[test]
     fn wx_only_type() {
@@ -553,15 +678,27 @@ mod tests {
     }
 
     #[test]
-    fn toall_valid() {
-        let spot = "To ALL de SV5FRI-1: SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300";
+    fn toall_valid_dxspider() {
+        let spot = "To ALL de EA8CEN-9: carnaval de tenerife ea8urt";
         let res = parse(spot);
         let exp = Spot::ToAll(ToAll {
-            call_de: "SV5FRI-1".into(),
-            msg: Some("SV5FRI-1 DXCluster: telnet dxc.sv5fri.eu 7300".into()),
+            call_de: "EA8CEN-9".into(),
+            msg: Some("carnaval de tenerife ea8urt".into()),
         });
         assert_eq!(res, Ok(exp));
     }
+
+    // FIXME: UTC already detected as comment
+    // #[test]
+    // fn toall_valid_cccluster() {
+    //     let spot = "To ALL de CT2IDL <1044Z> : TNX qso..";
+    //     let res = parse(spot);
+    //     let exp = Spot::ToAll(ToAll {
+    //         call_de: "CT2IDL".into(),
+    //         msg: Some("TNX qso..".into()),
+    //     });
+    //     assert_eq!(res, Ok(exp));
+    // }
 
     #[test]
     fn toall_only_type() {
@@ -584,12 +721,12 @@ mod tests {
 
     #[test]
     fn tolocal_valid_upper_case() {
-        let spot = "To LOCAL de N5UXT <1405Z> : rebooting";
+        let spot = "To LOCAL de IW5CLM: off";
         let res = parse(spot);
         let exp = Spot::ToLocal(ToLocal {
-            call_de: "N5UXT".into(),
-            utc: Some(1405),
-            msg: Some("rebooting".into()),
+            call_de: "IW5CLM".into(),
+            utc: None,
+            msg: Some("off".into()),
         });
         assert_eq!(res, Ok(exp));
     }
