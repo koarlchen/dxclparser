@@ -235,7 +235,7 @@ impl fmt::Display for ParseError {
 ///
 /// * `raw`: A raw spot that is already cleaned from newline or bell characters etc.
 ///
-/// # Result
+/// ## Result
 ///
 /// In case the spot was parsed successfully, the structure containing the spot shall be returned.
 /// In case of a error the occurred error shall be returned.
