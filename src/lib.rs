@@ -147,6 +147,7 @@ enum RegexWcyCaptureIds {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WX {
     pub call_de: String,
+    pub utc: Option<u16>,
     pub msg: Option<String>,
 }
 
@@ -154,6 +155,7 @@ impl WX {
     fn new() -> WX {
         WX {
             call_de: String::new(),
+            utc: None,
             msg: None,
         }
     }
@@ -161,7 +163,8 @@ impl WX {
 
 enum RegexWxCaptureIds {
     CallDe = 3,
-    Msg = 4,
+    Utc = 5,
+    Msg = 6,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -336,12 +339,13 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
 
 fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WX: Regex = Regex::new(r#"(^(WX de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
+        static ref RE_WX: Regex = Regex::new(r#"(^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$)"#).unwrap();
     }
 
     match RE_WX.captures(raw) {
         Some(c) => {
             wx.call_de = check_existence_str(&c, RegexWxCaptureIds::CallDe as u32)?;
+            wx.utc = check_existence_num_opt(&c, RegexWxCaptureIds::Utc as u32)?;
             wx.msg = check_existence_str_opt(&c, RegexWxCaptureIds::Msg as u32);
 
             Ok(Spot::WX(wx))
@@ -651,22 +655,23 @@ mod tests {
         let res = parse(spot);
         let exp = Spot::WX(WX {
             call_de: "VA3SAE".into(),
+            utc: None,
             msg: Some("va3sub".into()),
         });
         assert_eq!(res, Ok(exp));
     }
 
-    // FIXME: UTC already detected as comment
-    // #[test]
-    // fn wx_valid_cccluster() {
-    //     let spot = "WX de LA3WAA <1001Z> :  The command WX will send a local weather announcement.  (WX Sunny and Warm)";
-    //     let res = parse(spot);
-    //     let exp = Spot::WX(WX {
-    //         call_de: "LA3WAA".into(),
-    //         msg: Some("The command WX will send a local weather announcement.  (WX Sunny and Warm)".into()),
-    //     });
-    //     assert_eq!(res, Ok(exp));
-    // }
+    #[test]
+    fn wx_valid_cccluster() {
+        let spot = "WX de LA3WAA <1001Z> :  The command WX will send a local weather announcement.  (WX Sunny and Warm)";
+        let res = parse(spot);
+        let exp = Spot::WX(WX {
+            call_de: "LA3WAA".into(),
+            utc: Some(1001),
+            msg: Some("The command WX will send a local weather announcement.  (WX Sunny and Warm)".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
 
     #[test]
     fn wx_only_type() {
