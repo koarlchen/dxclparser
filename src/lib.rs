@@ -66,6 +66,44 @@ enum RegexDxCaptureIds {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct RBN {
+    pub mode: String,
+    pub db: i16,
+    pub speed: Option<u16>,
+    pub speed_unit: Option<String>,
+    pub info: String,
+    pub loc: Option<String>,
+}
+
+impl RBN {
+    pub fn new() -> RBN {
+        RBN {
+            mode: String::new(),
+            db: 0,
+            speed: None,
+            speed_unit: None,
+            info: String::new(),
+            loc: None,
+        }
+    }
+}
+
+enum RegexRbn1CaptureIds {
+    Mode = 1,
+    Db = 2,
+    Speed = 3,
+    SpeedUnit = 4,
+    Info = 5,
+}
+
+enum RegexRbn2CaptureIds {
+    Mode = 1,
+    Db = 2,
+    Loc = 3,
+    Info = 4,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WWV {
     pub call_de: String,
     pub utc: u8,
@@ -244,7 +282,7 @@ impl fmt::Display for ParseError {
 /// ## Result
 ///
 /// In case the spot was parsed successfully, the structure containing the spot shall be returned.
-/// In case of a error the occurred error shall be returned.
+/// In case of an error the occurred error shall be returned.
 pub fn parse(raw: &str) -> Result<Spot, ParseError> {
     match ident_type(raw)? {
         Spot::DX(dx) => parse_dx(raw, dx),
@@ -254,6 +292,54 @@ pub fn parse(raw: &str) -> Result<Spot, ParseError> {
         Spot::ToAll(ta) => parse_toall(raw, ta),
         Spot::ToLocal(tl) => parse_tolocal(raw, tl),
     }
+}
+
+/// Parse the comment section of a RBN spot into a struct.
+///
+/// ## Arguments
+///
+/// * `raw`: A raw comment section of a parsed DX spot. A RBN spot is basically a DX spot with additional data in the comment section)
+///
+/// ## Result
+///
+/// In case the comment was parsed successfully, the structure containing the information shall be returned.
+/// In case of an error the occurred error shall be returned.
+pub fn parse_rbn(raw: &str) -> Result<RBN, ParseError> {
+    lazy_static! {
+        static ref RE_RBN1: Regex = Regex::new(
+            r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([0-9]{1,3}) +((?:WPM|BPS)) +([a-zA-Z ]+)$"#
+        )
+        .unwrap();
+        static ref RE_RBN2: Regex = Regex::new(
+            r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([A-Z]{2}[0-9]{2})? +([a-zA-Z ]+)$"#
+        )
+        .unwrap();
+    }
+
+    if let Some(c) = RE_RBN1.captures(raw) {
+        let mut rbn = RBN::new();
+
+        rbn.mode = check_existence_str(&c, RegexRbn1CaptureIds::Mode as u32)?;
+        rbn.db = check_existence_num(&c, RegexRbn1CaptureIds::Db as u32)?;
+        rbn.speed = check_existence_num_opt(&c, RegexRbn1CaptureIds::Speed as u32)?;
+        rbn.speed_unit = check_existence_str_opt(&c, RegexRbn1CaptureIds::SpeedUnit as u32);
+        rbn.info = check_existence_str(&c, RegexRbn1CaptureIds::Info as u32)?;
+
+        return Ok(rbn);
+    }
+
+    if let Some(c) = RE_RBN2.captures(raw) {
+        let mut rbn = RBN::new();
+
+        rbn.mode = check_existence_str(&c, RegexRbn2CaptureIds::Mode as u32)?;
+        rbn.db = check_existence_num(&c, RegexRbn2CaptureIds::Db as u32)?;
+        rbn.info = check_existence_str(&c, RegexRbn2CaptureIds::Info as u32)?;
+        rbn.loc = check_existence_str_opt(&c, RegexRbn2CaptureIds::Loc as u32);
+
+        return Ok(rbn);
+    }
+
+    Err(ParseError::InvalidContent)
 }
 
 fn ident_type(input: &str) -> Result<Spot, ParseError> {
@@ -342,7 +428,8 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
 
 fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WX: Regex = Regex::new(r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
+        static ref RE_WX: Regex =
+            Regex::new(r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
     }
 
     match RE_WX.captures(raw) {
@@ -377,10 +464,9 @@ fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
 
 fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_TOLOCAL: Regex = Regex::new(
-            r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#
-        )
-        .unwrap();
+        static ref RE_TOLOCAL: Regex =
+            Regex::new(r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#)
+                .unwrap();
     }
 
     match RE_TOLOCAL.captures(raw) {
@@ -672,7 +758,10 @@ mod tests {
         let exp = Spot::WX(WX {
             call_de: "LA3WAA".into(),
             utc: Some(1001),
-            msg: Some("The command WX will send a local weather announcement.  (WX Sunny and Warm)".into()),
+            msg: Some(
+                "The command WX will send a local weather announcement.  (WX Sunny and Warm)"
+                    .into(),
+            ),
         });
         assert_eq!(res, Ok(exp));
     }
@@ -744,5 +833,65 @@ mod tests {
         let spot = "To Local de N5UXT";
         let res = parse(spot);
         assert_eq!(res, Err(ParseError::InvalidContent));
+    }
+
+    #[test]
+    fn rbn1_ft8() {
+        let spot = "FT8  -15 dB   6 BPS  CQ";
+        let res = parse_rbn(spot);
+        let exp = RBN {
+            mode: "FT8".into(),
+            db: -15,
+            speed: Some(6),
+            speed_unit: Some("BPS".into()),
+            info: "CQ".into(),
+            loc: None,
+        };
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn rbn1_cw() {
+        let spot = "CW     9 dB  21 WPM  NCDXF B";
+        let res = parse_rbn(spot);
+        let exp = RBN {
+            mode: "CW".into(),
+            db: 9,
+            speed: Some(21),
+            speed_unit: Some("WPM".into()),
+            info: "NCDXF B".into(),
+            loc: None,
+        };
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn rbn1_rtty() {
+        let spot = "RTTY  10 dB  45 BPS  CQ";
+        let res = parse_rbn(spot);
+        let exp = RBN {
+            mode: "RTTY".into(),
+            db: 10,
+            speed: Some(45),
+            speed_unit: Some("BPS".into()),
+            info: "CQ".into(),
+            loc: None,
+        };
+        assert_eq!(res, Ok(exp));
+    }
+
+    #[test]
+    fn rbn2() {
+        let spot = "FT8  -12 dB  FK68    CQ";
+        let res = parse_rbn(spot);
+        let exp = RBN {
+            mode: "FT8".into(),
+            db: -12,
+            speed: None,
+            speed_unit: None,
+            info: "CQ".into(),
+            loc: Some("FK68".into()),
+        };
+        assert_eq!(res, Ok(exp));
     }
 }
