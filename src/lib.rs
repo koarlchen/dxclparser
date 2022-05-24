@@ -57,12 +57,12 @@ impl DX {
 }
 
 enum RegexDxCaptureIds {
-    CallDe = 3,
-    Freq = 4,
-    CallDx = 5,
-    Comment = 6,
-    Utc = 7,
-    Loc = 8,
+    CallDe = 2,
+    Freq = 3,
+    CallDx = 4,
+    Comment = 5,
+    Utc = 6,
+    Loc = 7,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -91,13 +91,13 @@ impl WWV {
 }
 
 enum RegexWwvCaptureIds {
-    CallDe = 3,
-    Utc = 4,
-    Sfi = 5,
-    A = 6,
-    K = 7,
-    Info1 = 8,
-    Info2 = 9,
+    CallDe = 2,
+    Utc = 3,
+    Sfi = 4,
+    A = 5,
+    K = 6,
+    Info1 = 7,
+    Info2 = 8,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -132,16 +132,16 @@ impl WCY {
 }
 
 enum RegexWcyCaptureIds {
-    CallDe = 3,
-    Utc = 4,
-    K = 5,
-    Expk = 6,
-    A = 7,
-    R = 8,
-    Sfi = 9,
-    Sa = 10,
-    Gmf = 11,
-    Au = 12,
+    CallDe = 2,
+    Utc = 3,
+    K = 4,
+    Expk = 5,
+    A = 6,
+    R = 7,
+    Sfi = 8,
+    Sa = 9,
+    Gmf = 10,
+    Au = 11,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -162,9 +162,9 @@ impl WX {
 }
 
 enum RegexWxCaptureIds {
-    CallDe = 3,
-    Utc = 5,
-    Msg = 6,
+    CallDe = 2,
+    Utc = 4,
+    Msg = 5,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -185,9 +185,9 @@ impl ToAll {
 }
 
 enum RegexToAllCaptureIds {
-    CallDe = 3,
-    Utc = 5,
-    Msg = 6,
+    CallDe = 2,
+    Utc = 4,
+    Msg = 5,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -208,9 +208,9 @@ impl ToLocal {
 }
 
 enum RegexToLocalCaptureIds {
-    CallDe = 3,
-    Utc = 4,
-    Msg = 5,
+    CallDe = 2,
+    Utc = 3,
+    Msg = 4,
 }
 
 /// Possible errors while parsing spot
@@ -276,7 +276,7 @@ fn ident_type(input: &str) -> Result<Spot, ParseError> {
 
 fn parse_dx(raw: &str, mut dx: DX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_DX: Regex = Regex::new(r#"(^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$)"#).unwrap();
+        static ref RE_DX: Regex = Regex::new(r#"^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#).unwrap();
     }
 
     match RE_DX.captures(raw) {
@@ -297,7 +297,7 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<Spot, ParseError> {
 
 fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WWV: Regex = Regex::new(r#"(^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$)"#).unwrap();
+        static ref RE_WWV: Regex = Regex::new(r#"^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$"#).unwrap();
     }
 
     match RE_WWV.captures(raw) {
@@ -318,7 +318,7 @@ fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<Spot, ParseError> {
 
 fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WCY: Regex = Regex::new(r#"(^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$)"#).unwrap();
+        static ref RE_WCY: Regex = Regex::new(r#"^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#).unwrap();
     }
 
     match RE_WCY.captures(raw) {
@@ -342,7 +342,7 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
 
 fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WX: Regex = Regex::new(r#"(^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$)"#).unwrap();
+        static ref RE_WX: Regex = Regex::new(r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
     }
 
     match RE_WX.captures(raw) {
@@ -360,7 +360,7 @@ fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
 fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_TOALL: Regex =
-            Regex::new(r#"(^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$)"#).unwrap();
+            Regex::new(r#"^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
     }
 
     match RE_TOALL.captures(raw) {
@@ -378,7 +378,7 @@ fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
 fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_TOLOCAL: Regex = Regex::new(
-            r#"(^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$)"#
+            r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#
         )
         .unwrap();
     }
