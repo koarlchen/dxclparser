@@ -170,6 +170,7 @@ enum RegexWxCaptureIds {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ToAll {
     pub call_de: String,
+    pub utc: Option<u16>,
     pub msg: Option<String>,
 }
 
@@ -177,6 +178,7 @@ impl ToAll {
     fn new() -> ToAll {
         ToAll {
             call_de: String::new(),
+            utc: None,
             msg: None,
         }
     }
@@ -184,7 +186,8 @@ impl ToAll {
 
 enum RegexToAllCaptureIds {
     CallDe = 3,
-    Msg = 4,
+    Utc = 5,
+    Msg = 6,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -357,12 +360,13 @@ fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
 fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
     lazy_static! {
         static ref RE_TOALL: Regex =
-            Regex::new(r#"(^(To ALL de) +([A-Z0-9/\-#]*)[ :]+(.*)?$)"#).unwrap();
+            Regex::new(r#"(^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$)"#).unwrap();
     }
 
     match RE_TOALL.captures(raw) {
         Some(c) => {
             ta.call_de = check_existence_str(&c, RegexToAllCaptureIds::CallDe as u32)?;
+            ta.utc = check_existence_num_opt(&c, RegexToAllCaptureIds::Utc as u32)?;
             ta.msg = check_existence_str_opt(&c, RegexToAllCaptureIds::Msg as u32);
 
             Ok(Spot::ToAll(ta))
@@ -686,22 +690,23 @@ mod tests {
         let res = parse(spot);
         let exp = Spot::ToAll(ToAll {
             call_de: "EA8CEN-9".into(),
+            utc: None,
             msg: Some("carnaval de tenerife ea8urt".into()),
         });
         assert_eq!(res, Ok(exp));
     }
 
-    // FIXME: UTC already detected as comment
-    // #[test]
-    // fn toall_valid_cccluster() {
-    //     let spot = "To ALL de CT2IDL <1044Z> : TNX qso..";
-    //     let res = parse(spot);
-    //     let exp = Spot::ToAll(ToAll {
-    //         call_de: "CT2IDL".into(),
-    //         msg: Some("TNX qso..".into()),
-    //     });
-    //     assert_eq!(res, Ok(exp));
-    // }
+    #[test]
+    fn toall_valid_cccluster() {
+        let spot = "To ALL de CT2IDL <1044Z> : TNX qso..";
+        let res = parse(spot);
+        let exp = Spot::ToAll(ToAll {
+            call_de: "CT2IDL".into(),
+            utc: Some(1044),
+            msg: Some("TNX qso..".into()),
+        });
+        assert_eq!(res, Ok(exp));
+    }
 
     #[test]
     fn toall_only_type() {
