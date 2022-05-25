@@ -33,13 +33,25 @@ impl Spot {
     }
 }
 
+/// DX Spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct DX {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Call of target station
     pub call_dx: String,
+
+    /// Frequency (in Hz)
     pub freq: u64,
+
+    /// Time in UTC
     pub utc: u16,
+
+    /// Locator
     pub loc: Option<String>,
+
+    /// Comment
     pub comment: Option<String>,
 }
 
@@ -65,13 +77,25 @@ enum RegexDxCaptureIds {
     Loc = 7,
 }
 
+/// RBN spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct RBN {
+    /// Mode: CW, RTTY or FT8
     pub mode: String,
+
+    /// Signal strength
     pub db: i16,
+
+    /// Speed
     pub speed: Option<u16>,
+
+    /// Unit of speed
     pub speed_unit: Option<String>,
+
+    /// Additional information
     pub info: String,
+
+    /// Locator
     pub loc: Option<String>,
 }
 
@@ -103,14 +127,28 @@ enum RegexRbn2CaptureIds {
     Info = 4,
 }
 
+/// WWV spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WWV {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Time in UTC
     pub utc: u8,
+
+    /// SFI index
     pub sfi: u16,
+
+    /// A index
     pub a: u16,
+
+    /// K index
     pub k: u16,
+
+    /// Information 1
     pub info1: String,
+
+    /// Information 2
     pub info2: String,
 }
 
@@ -138,17 +176,37 @@ enum RegexWwvCaptureIds {
     Info2 = 8,
 }
 
+/// WCY spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WCY {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Time in UTC
     pub utc: u8,
+
+    /// K index
     pub k: u16,
+
+    /// expK index
     pub expk: u16,
+
+    /// A index
     pub a: u16,
+
+    /// R index
     pub r: u16,
+
+    /// SFI index
     pub sfi: u16,
+
+    /// SA index
     pub sa: String,
+
+    /// GMF
     pub gmf: String,
+
+    /// Aurora
     pub au: String,
 }
 
@@ -182,10 +240,16 @@ enum RegexWcyCaptureIds {
     Au = 11,
 }
 
+/// WX spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct WX {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Time in UTC
     pub utc: Option<u16>,
+
+    /// Message sent with spot
     pub msg: Option<String>,
 }
 
@@ -205,10 +269,16 @@ enum RegexWxCaptureIds {
     Msg = 5,
 }
 
+/// To all spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ToAll {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Time in UTC
     pub utc: Option<u16>,
+
+    /// Message sent with spot
     pub msg: Option<String>,
 }
 
@@ -228,10 +298,16 @@ enum RegexToAllCaptureIds {
     Msg = 5,
 }
 
+/// To local spot
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ToLocal {
+    /// Call of spotting station
     pub call_de: String,
+
+    /// Time in UTC
     pub utc: Option<u16>,
+
+    /// Message sent with spot
     pub msg: Option<String>,
 }
 
