@@ -1,5 +1,3 @@
-extern crate dxclparser;
-
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -19,7 +17,7 @@ fn main() {
         let reader = io::BufReader::new(file).lines();
 
         for line in reader {
-            match dxclparser::parse(line.unwrap().trim().trim_end_matches('\u{0007}')) {
+            match dxclparser::parser::parse(line.unwrap().trim().trim_end_matches('\u{0007}')) {
                 Ok(spot) => {
                     println!("{}", spot.to_json());
                 }

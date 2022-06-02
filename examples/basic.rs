@@ -1,5 +1,3 @@
-extern crate dxclparser;
-
 use std::env;
 use std::process;
 
@@ -14,7 +12,7 @@ fn main() {
         eprintln!("Usage: {} <spot>", args[0]);
         retval = 1;
     } else {
-        match dxclparser::parse(args[1].trim().trim_end_matches('\u{0007}')) {
+        match dxclparser::parser::parse(args[1].trim().trim_end_matches('\u{0007}')) {
             Ok(spot) => {
                 println!("{}", spot.to_json());
                 retval = 0;
