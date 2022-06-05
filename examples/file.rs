@@ -17,7 +17,7 @@ fn main() {
         let reader = io::BufReader::new(file).lines();
 
         for line in reader {
-            match dxclparser::parser::parse(line.unwrap().trim().trim_end_matches('\u{0007}')) {
+            match dxclparser::parse(line.unwrap().trim().trim_end_matches('\u{0007}')) {
                 Ok(spot) => {
                     println!("{}", spot.to_json());
                 }
