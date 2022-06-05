@@ -3,7 +3,12 @@ name = "dxclparser"
 version = "0.1.0"
 authors = ["Max <max@karl.wf>"]
 edition = "2021"
-publish = false
+license = "LGPL-3.0-or-later"
+readme = "README.md"
+repository = "https://github.com/koarlchen/dxclparser.git"
+description = "A regex-based parser for the telnet interface provided by a DX cluster"
+keywords = ["amateur-radio", "ham", "ham-radio", "dxcluster", "cluster"]
+
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

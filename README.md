@@ -1,6 +1,6 @@
 # libdxclparser
 
-Regex-based parser for spots received from a DX cluster.
+A regex-based parser for the telnet interface provided by a DX cluster.
 
 See `example/` folder for exemplary usage.
 
