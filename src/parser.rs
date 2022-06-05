@@ -1,71 +1,9 @@
-use regex::{Captures, Regex};
-use serde::{Deserialize, Serialize};
-use std::fmt;
+use crate::types::*;
 use lazy_static::lazy_static;
+use regex::{Captures, Regex};
+use std::fmt;
 
-/// Structured representation of a parsed spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub enum Spot {
-    /// Spot of the type DX
-    DX(DX),
-
-    /// Spot of the type WWV
-    WWV(WWV),
-
-    /// Spot of the type WCY
-    WCY(WCY),
-
-    /// Spot of the type WX
-    WX(WX),
-
-    /// Spot of the type ToAll
-    ToAll(ToAll),
-
-    /// Spot of the type ToLocal
-    ToLocal(ToLocal),
-}
-
-impl Spot {
-    /// Convert structured spot into its corresponding json format
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
-    }
-}
-
-/// DX Spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct DX {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Call of target station
-    pub call_dx: String,
-
-    /// Frequency (in Hz)
-    pub freq: u64,
-
-    /// Time in UTC
-    pub utc: u16,
-
-    /// Locator
-    pub loc: Option<String>,
-
-    /// Comment
-    pub comment: Option<String>,
-}
-
-impl DX {
-    fn new() -> DX {
-        DX {
-            call_de: String::new(),
-            call_dx: String::new(),
-            freq: 0,
-            utc: 0,
-            loc: None,
-            comment: None,
-        }
-    }
-}
+const REGEX_PATTERN_DX: &str = r#"^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#;
 
 enum RegexDxCaptureIds {
     CallDe = 2,
@@ -76,40 +14,8 @@ enum RegexDxCaptureIds {
     Loc = 7,
 }
 
-/// RBN spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct RBN {
-    /// Mode: CW, RTTY or FT8
-    pub mode: String,
-
-    /// Signal strength
-    pub db: i16,
-
-    /// Speed
-    pub speed: Option<u16>,
-
-    /// Unit of speed
-    pub speed_unit: Option<String>,
-
-    /// Additional information
-    pub info: String,
-
-    /// Locator
-    pub loc: Option<String>,
-}
-
-impl RBN {
-    pub fn new() -> RBN {
-        RBN {
-            mode: String::new(),
-            db: 0,
-            speed: None,
-            speed_unit: None,
-            info: String::new(),
-            loc: None,
-        }
-    }
-}
+const REGEX_PATTERN_RBN1: &str =
+    r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([0-9]{1,3}) +((?:WPM|BPS)) +([a-zA-Z ]+)$"#;
 
 enum RegexRbn1CaptureIds {
     Mode = 1,
@@ -119,6 +25,9 @@ enum RegexRbn1CaptureIds {
     Info = 5,
 }
 
+const REGEX_PATTERN_RBN2: &str =
+    r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([A-Z]{2}[0-9]{2})? +([a-zA-Z ]+)$"#;
+
 enum RegexRbn2CaptureIds {
     Mode = 1,
     Db = 2,
@@ -126,44 +35,7 @@ enum RegexRbn2CaptureIds {
     Info = 4,
 }
 
-/// WWV spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct WWV {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Time in UTC
-    pub utc: u8,
-
-    /// SFI index
-    pub sfi: u16,
-
-    /// A index
-    pub a: u16,
-
-    /// K index
-    pub k: u16,
-
-    /// Information 1
-    pub info1: String,
-
-    /// Information 2
-    pub info2: String,
-}
-
-impl WWV {
-    fn new() -> WWV {
-        WWV {
-            call_de: String::new(),
-            utc: 0,
-            sfi: 0,
-            a: 0,
-            k: 0,
-            info1: String::new(),
-            info2: String::new(),
-        }
-    }
-}
+const REGEX_PATTERN_WWV: &str = r#"^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$"#;
 
 enum RegexWwvCaptureIds {
     CallDe = 2,
@@ -175,56 +47,7 @@ enum RegexWwvCaptureIds {
     Info2 = 8,
 }
 
-/// WCY spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct WCY {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Time in UTC
-    pub utc: u8,
-
-    /// K index
-    pub k: u16,
-
-    /// expK index
-    pub expk: u16,
-
-    /// A index
-    pub a: u16,
-
-    /// R index
-    pub r: u16,
-
-    /// SFI index
-    pub sfi: u16,
-
-    /// SA index
-    pub sa: String,
-
-    /// GMF
-    pub gmf: String,
-
-    /// Aurora
-    pub au: String,
-}
-
-impl WCY {
-    fn new() -> WCY {
-        WCY {
-            call_de: String::new(),
-            utc: 0,
-            k: 0,
-            expk: 0,
-            a: 0,
-            r: 0,
-            sfi: 0,
-            sa: String::new(),
-            gmf: String::new(),
-            au: String::new(),
-        }
-    }
-}
+const REGEX_PATTERN_WCY: &str = r#"^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#;
 
 enum RegexWcyCaptureIds {
     CallDe = 2,
@@ -239,28 +62,7 @@ enum RegexWcyCaptureIds {
     Au = 11,
 }
 
-/// WX spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct WX {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Time in UTC
-    pub utc: Option<u16>,
-
-    /// Message sent with spot
-    pub msg: Option<String>,
-}
-
-impl WX {
-    fn new() -> WX {
-        WX {
-            call_de: String::new(),
-            utc: None,
-            msg: None,
-        }
-    }
-}
+const REGEX_PATTERN_WX: &str = r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexWxCaptureIds {
     CallDe = 2,
@@ -268,28 +70,7 @@ enum RegexWxCaptureIds {
     Msg = 5,
 }
 
-/// To all spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct ToAll {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Time in UTC
-    pub utc: Option<u16>,
-
-    /// Message sent with spot
-    pub msg: Option<String>,
-}
-
-impl ToAll {
-    fn new() -> ToAll {
-        ToAll {
-            call_de: String::new(),
-            utc: None,
-            msg: None,
-        }
-    }
-}
+const REGEX_PATTERN_TOALL: &str = r#"^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexToAllCaptureIds {
     CallDe = 2,
@@ -297,28 +78,8 @@ enum RegexToAllCaptureIds {
     Msg = 5,
 }
 
-/// To local spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct ToLocal {
-    /// Call of spotting station
-    pub call_de: String,
-
-    /// Time in UTC
-    pub utc: Option<u16>,
-
-    /// Message sent with spot
-    pub msg: Option<String>,
-}
-
-impl ToLocal {
-    fn new() -> ToLocal {
-        ToLocal {
-            call_de: String::new(),
-            utc: None,
-            msg: None,
-        }
-    }
-}
+const REGEX_PATTERN_TOLOCAL: &str =
+    r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexToLocalCaptureIds {
     CallDe = 2,
@@ -381,14 +142,8 @@ pub fn parse(raw: &str) -> Result<Spot, ParseError> {
 /// In case of an error the occurred error shall be returned.
 pub fn parse_rbn(raw: &str) -> Result<RBN, ParseError> {
     lazy_static! {
-        static ref RE_RBN1: Regex = Regex::new(
-            r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([0-9]{1,3}) +((?:WPM|BPS)) +([a-zA-Z ]+)$"#
-        )
-        .unwrap();
-        static ref RE_RBN2: Regex = Regex::new(
-            r#"^([a-zA-z0-9]{2,}) +([0-9\-]{1,4}) +dB +([A-Z]{2}[0-9]{2})? +([a-zA-Z ]+)$"#
-        )
-        .unwrap();
+        static ref RE_RBN1: Regex = Regex::new(REGEX_PATTERN_RBN1).unwrap();
+        static ref RE_RBN2: Regex = Regex::new(REGEX_PATTERN_RBN2).unwrap();
     }
 
     if let Some(c) = RE_RBN1.captures(raw) {
@@ -437,7 +192,7 @@ fn ident_type(input: &str) -> Result<Spot, ParseError> {
 
 fn parse_dx(raw: &str, mut dx: DX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_DX: Regex = Regex::new(r#"^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#).unwrap();
+        static ref RE_DX: Regex = Regex::new(REGEX_PATTERN_DX).unwrap();
     }
 
     match RE_DX.captures(raw) {
@@ -458,7 +213,7 @@ fn parse_dx(raw: &str, mut dx: DX) -> Result<Spot, ParseError> {
 
 fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WWV: Regex = Regex::new(r#"^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$"#).unwrap();
+        static ref RE_WWV: Regex = Regex::new(REGEX_PATTERN_WWV).unwrap();
     }
 
     match RE_WWV.captures(raw) {
@@ -479,7 +234,7 @@ fn parse_wwv(raw: &str, mut wwv: WWV) -> Result<Spot, ParseError> {
 
 fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WCY: Regex = Regex::new(r#"^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#).unwrap();
+        static ref RE_WCY: Regex = Regex::new(REGEX_PATTERN_WCY).unwrap();
     }
 
     match RE_WCY.captures(raw) {
@@ -503,8 +258,7 @@ fn parse_wcy(raw: &str, mut wcy: WCY) -> Result<Spot, ParseError> {
 
 fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_WX: Regex =
-            Regex::new(r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
+        static ref RE_WX: Regex = Regex::new(REGEX_PATTERN_WX).unwrap();
     }
 
     match RE_WX.captures(raw) {
@@ -521,8 +275,7 @@ fn parse_wx(raw: &str, mut wx: WX) -> Result<Spot, ParseError> {
 
 fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_TOALL: Regex =
-            Regex::new(r#"^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#).unwrap();
+        static ref RE_TOALL: Regex = Regex::new(REGEX_PATTERN_TOALL).unwrap();
     }
 
     match RE_TOALL.captures(raw) {
@@ -539,9 +292,7 @@ fn parse_toall(raw: &str, mut ta: ToAll) -> Result<Spot, ParseError> {
 
 fn parse_tolocal(raw: &str, mut tl: ToLocal) -> Result<Spot, ParseError> {
     lazy_static! {
-        static ref RE_TOLOCAL: Regex =
-            Regex::new(r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#)
-                .unwrap();
+        static ref RE_TOLOCAL: Regex = Regex::new(REGEX_PATTERN_TOLOCAL).unwrap();
     }
 
     match RE_TOLOCAL.captures(raw) {
