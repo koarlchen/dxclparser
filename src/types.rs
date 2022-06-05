@@ -52,7 +52,7 @@ pub struct DX {
 }
 
 impl DX {
-    pub fn new() -> DX {
+    pub fn new() -> Self {
         DX {
             call_de: String::new(),
             call_dx: String::new(),
@@ -61,6 +61,12 @@ impl DX {
             loc: None,
             comment: None,
         }
+    }
+}
+
+impl Default for DX {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -87,7 +93,7 @@ pub struct RBN {
 }
 
 impl RBN {
-    pub fn new() -> RBN {
+    pub fn new() -> Self {
         RBN {
             mode: String::new(),
             db: 0,
@@ -96,6 +102,12 @@ impl RBN {
             info: String::new(),
             loc: None,
         }
+    }
+}
+
+impl Default for RBN {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -125,7 +137,7 @@ pub struct WWV {
 }
 
 impl WWV {
-    pub fn new() -> WWV {
+    pub fn new() -> Self {
         WWV {
             call_de: String::new(),
             utc: 0,
@@ -135,6 +147,12 @@ impl WWV {
             info1: String::new(),
             info2: String::new(),
         }
+    }
+}
+
+impl Default for WWV {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -173,7 +191,7 @@ pub struct WCY {
 }
 
 impl WCY {
-    pub fn new() -> WCY {
+    pub fn new() -> Self {
         WCY {
             call_de: String::new(),
             utc: 0,
@@ -186,6 +204,12 @@ impl WCY {
             gmf: String::new(),
             au: String::new(),
         }
+    }
+}
+
+impl Default for WCY {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -203,12 +227,18 @@ pub struct WX {
 }
 
 impl WX {
-    pub fn new() -> WX {
+    pub fn new() -> Self {
         WX {
             call_de: String::new(),
             utc: None,
             msg: None,
         }
+    }
+}
+
+impl Default for WX {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -226,12 +256,18 @@ pub struct ToAll {
 }
 
 impl ToAll {
-    pub fn new() -> ToAll {
+    pub fn new() -> Self {
         ToAll {
             call_de: String::new(),
             utc: None,
             msg: None,
         }
+    }
+}
+
+impl Default for ToAll {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -249,11 +285,17 @@ pub struct ToLocal {
 }
 
 impl ToLocal {
-    pub fn new() -> ToLocal {
+    pub fn new() -> Self {
         ToLocal {
             call_de: String::new(),
             utc: None,
             msg: None,
         }
+    }
+}
+
+impl Default for ToLocal {
+    fn default() -> Self {
+        Self::new()
     }
 }
