@@ -7,7 +7,7 @@ license = "LGPL-3.0-or-later"
 readme = "README.md"
 repository = "https://github.com/koarlchen/dxclparser.git"
 description = "A regex-based parser for the telnet interface provided by a DX cluster"
-keywords = ["amateur-radio", "ham", "ham-radio", "dxcluster", "cluster"]
+keywords = ["ham", "ham-radio", "dxcluster", "cluster"]
 
 
 [dependencies]
