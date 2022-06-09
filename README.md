@@ -28,6 +28,7 @@ To build this library, simply execute `cargo build [--release]`.
 The basic test cases can be executed through `cargo test`.
 
 The example `basic.rs` parses a spot given as a commandline argument. See therefore also the shell script `basic_run.sh` which uses netcat to connect to a cluster server and outputs the parsed spot in its json format.
+The example `type.rs` also takes a spot as a commandline argument but demonstrates how to handle each type of spot separately.
 The example `file.rs` reads a file given as a commandline argument line by line and outputs the parsed spots in its json format.
 
 

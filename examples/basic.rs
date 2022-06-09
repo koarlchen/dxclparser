@@ -2,6 +2,7 @@ use std::env;
 use std::process;
 
 /// Parse a spot provided as a commandline argument.
+/// Output the parsed spot in its json format.
 /// See also `basic_run.sh` for exemplary use.
 fn main() {
     let args: Vec<String> = env::args().collect();
