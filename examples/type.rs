@@ -20,8 +20,12 @@ fn main() {
                     dxclparser::Spot::WWV(wwv) => println!("Found a WWV spot from {}", wwv.call_de),
                     dxclparser::Spot::WCY(wcy) => println!("Found a WCY spot from {}", wcy.call_de),
                     dxclparser::Spot::WX(wx) => println!("Found a WX spot from {}", wx.call_de),
-                    dxclparser::Spot::ToAll(toall) => println!("Found a ToAll spot from {}", toall.call_de),
-                    dxclparser::Spot::ToLocal(tolocal) => println!("Found a ToLocal spot from {}", tolocal.call_de),
+                    dxclparser::Spot::ToAll(toall) => {
+                        println!("Found a ToAll spot from {}", toall.call_de)
+                    }
+                    dxclparser::Spot::ToLocal(tolocal) => {
+                        println!("Found a ToLocal spot from {}", tolocal.call_de)
+                    }
                 }
                 retval = 0;
             }
