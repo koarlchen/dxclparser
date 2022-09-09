@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Structured representation of a parsed spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum Spot {
     /// Spot of the type DX
     DX(DX),
@@ -34,7 +34,7 @@ impl Spot {
 }
 
 /// DX Spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct DX {
     /// Call of spotting station
     pub call_de: String,
@@ -75,7 +75,7 @@ impl Default for DX {
 }
 
 /// RBN spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct RBN {
     /// Mode: CW, RTTY or FT8
     pub mode: String,
@@ -116,7 +116,7 @@ impl Default for RBN {
 }
 
 /// WWV spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct WWV {
     /// Call of spotting station
     pub call_de: String,
@@ -161,7 +161,7 @@ impl Default for WWV {
 }
 
 /// WCY spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct WCY {
     /// Call of spotting station
     pub call_de: String,
@@ -218,7 +218,7 @@ impl Default for WCY {
 }
 
 /// WX spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct WX {
     /// Call of spotting station
     pub call_de: String,
@@ -247,7 +247,7 @@ impl Default for WX {
 }
 
 /// To all spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct ToAll {
     /// Call of spotting station
     pub call_de: String,
@@ -276,7 +276,7 @@ impl Default for ToAll {
 }
 
 /// To local spot
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct ToLocal {
     /// Call of spotting station
     pub call_de: String,
