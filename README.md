@@ -10,6 +10,7 @@ See `example/` folder for exemplary usage.
 * DXSpider
 * AR-Cluster
 * CC Cluster
+* Reverse Beacon Network
 
 ## Supported types of Spots
 
@@ -20,6 +21,8 @@ See `example/` folder for exemplary usage.
 * WX
 * ToAll
 * ToLocal
+
+Note: A RBN spot is a spot of the type DX with a special format of the comment section. Therefore this library provides a separate method for extracting the RBN information out of the comment section of an already parsed DX spot.
 
 ## Build, Test and Run
 
