@@ -5,7 +5,7 @@
 use crate::types::*;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
-use std::fmt;
+use thiserror::Error;
 
 const REGEX_PATTERN_DX: &str = r#"^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#;
 
@@ -92,25 +92,19 @@ enum RegexToLocalCaptureIds {
 }
 
 /// Possible errors while parsing spot
-#[derive(Debug, PartialEq)]
+#[derive(Error, Debug, PartialEq, Eq)]
 pub enum ParseError {
-    /// Unknown type of spot
+    #[error("Unknown type of spot")]
     UnknownType,
 
-    /// The content of the spot does not match the detected type
+    #[error("The content of the spot does not match the detected type")]
     InvalidContent,
 
-    /// Required field of the spot is missing
+    #[error("Required field of the spot is missing")]
     MissingField,
 
-    /// Internal error occurred while parsing
+    #[error("Internal error occurred while parsing")]
     InternalError,
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Error while parsing: {:?}", self)
-    }
 }
 
 /// Parse a spot received from a DX Cluster into a struct.
