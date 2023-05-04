@@ -7,15 +7,15 @@ use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use thiserror::Error;
 
-const REGEX_PATTERN_DX: &str = r#"^(DX de) +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#;
+const REGEX_PATTERN_DX: &str = r#"^DX de +([A-Z0-9/\-#]{3,}):? *(\d*.\d{1,2}) *([A-Z0-9/\-#]{3,}) +(.*\S)? +(\d{4}){1}Z *(\w{2}\d{2})?$"#;
 
 enum RegexDxCaptureIds {
-    CallDe = 2,
-    Freq = 3,
-    CallDx = 4,
-    Comment = 5,
-    Utc = 6,
-    Loc = 7,
+    CallDe = 1,
+    Freq = 2,
+    CallDx = 3,
+    Comment = 4,
+    Utc = 5,
+    Loc = 6,
 }
 
 const REGEX_PATTERN_RBN1: &str =
@@ -39,56 +39,56 @@ enum RegexRbn2CaptureIds {
     Info = 4,
 }
 
-const REGEX_PATTERN_WWV: &str = r#"^(WWV de) +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$"#;
+const REGEX_PATTERN_WWV: &str = r#"^WWV de +([A-Z0-9/\-#]*) +<(\d{2})Z?> *: *SFI=(\d{1,3}), A=(\d{1,3}), K=(\d{1,3}), (.*\b) *-> *(.*\b) *$"#;
 
 enum RegexWwvCaptureIds {
-    CallDe = 2,
-    Utc = 3,
-    Sfi = 4,
-    A = 5,
-    K = 6,
-    Info1 = 7,
-    Info2 = 8,
+    CallDe = 1,
+    Utc = 2,
+    Sfi = 3,
+    A = 4,
+    K = 5,
+    Info1 = 6,
+    Info2 = 7,
 }
 
-const REGEX_PATTERN_WCY: &str = r#"^(WCY de) +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#;
+const REGEX_PATTERN_WCY: &str = r#"^WCY de +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#;
 
 enum RegexWcyCaptureIds {
-    CallDe = 2,
-    Utc = 3,
-    K = 4,
-    Expk = 5,
-    A = 6,
-    R = 7,
-    Sfi = 8,
-    Sa = 9,
-    Gmf = 10,
-    Au = 11,
+    CallDe = 1,
+    Utc = 2,
+    K = 3,
+    Expk = 4,
+    A = 5,
+    R = 6,
+    Sfi = 7,
+    Sa = 8,
+    Gmf = 9,
+    Au = 10,
 }
 
-const REGEX_PATTERN_WX: &str = r#"^(WX de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#;
+const REGEX_PATTERN_WX: &str = r#"^WX de +([A-Z0-9/\-#]*)\s?(?:<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexWxCaptureIds {
-    CallDe = 2,
-    Utc = 4,
-    Msg = 5,
+    CallDe = 1,
+    Utc = 2,
+    Msg = 3,
 }
 
-const REGEX_PATTERN_TOALL: &str = r#"^(To ALL de) +([A-Z0-9/\-#]*)\s?(<(\d{4})Z>)?[ :]+(.*)?$"#;
+const REGEX_PATTERN_TOALL: &str = r#"^To ALL de +([A-Z0-9/\-#]*)\s?(?:<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexToAllCaptureIds {
-    CallDe = 2,
-    Utc = 4,
-    Msg = 5,
+    CallDe = 1,
+    Utc = 2,
+    Msg = 3,
 }
 
 const REGEX_PATTERN_TOLOCAL: &str =
-    r#"^(To (?:LOCAL|Local) de) +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#;
+    r#"^To (?:LOCAL|Local) de +([A-Z0-9/\-#]*)(?: +<(\d{4})Z>)?[ :]+(.*)?$"#;
 
 enum RegexToLocalCaptureIds {
-    CallDe = 2,
-    Utc = 3,
-    Msg = 4,
+    CallDe = 1,
+    Utc = 2,
+    Msg = 3,
 }
 
 /// Possible errors while parsing spot
