@@ -51,7 +51,7 @@ enum RegexWwvCaptureIds {
     Info2 = 7,
 }
 
-const REGEX_PATTERN_WCY: &str = r#"^WCY de +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2}) *$"#;
+const REGEX_PATTERN_WCY: &str = r#"^WCY de +([A-Z0-9/\-#]*) +<(\d{2})> *: +K=(\d{1,3}) expK=(\d{1,3}) A=(\d{1,3}) R=(\d{1,3}) SFI=(\d{1,3}) SA=([a-zA-Z]{1,3}) GMF=([a-zA-Z]{1,3}) Au=([a-zA-Z]{2,6}) *$"#;
 
 enum RegexWcyCaptureIds {
     CallDe = 1,
@@ -520,19 +520,19 @@ mod tests {
 
     #[test]
     fn wcy_valid_dxspider() {
-        let spot = "WCY de DK0WCY-1 <22> : K=4 expK=2 A=14 R=0 SFI=68 SA=qui GMF=act Au=no";
+        let spot = "WCY de DK0WCY-1 <22> : K=9 expK=0 A=139 R=156 SFI=223 SA=maj GMF=sev Au=aurora";
         let res = parse(spot);
         let exp = Spot::WCY(WCY {
             call_de: "DK0WCY-1".into(),
             utc: 22,
-            k: 4,
-            expk: 2,
-            a: 14,
-            r: 0,
-            sfi: 68,
-            sa: "qui".into(),
-            gmf: "act".into(),
-            au: "no".into(),
+            k: 9,
+            expk: 0,
+            a: 139,
+            r: 156,
+            sfi: 223,
+            sa: "maj".into(),
+            gmf: "sev".into(),
+            au: "aurora".into(),
         });
         assert_eq!(res, Ok(exp));
     }
